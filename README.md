@@ -20,12 +20,14 @@ git clone https://github.com/angelo-casciani/rag_next_activity
 cd rag_next_activity
 ```
 
-Run the following command to install the necessary dependencies using pip:
+Run the following command to install the necessary dependencies using *pip*:
 ```bash
 pip install -r requirements.txt
 ```
 
-This command will read the requirements.txt file and install all the specified packages along with their dependencies.
+This command will read the *requirements.txt* file and install all the specified packages along with their dependencies.
+
+Extract the content of the compressed event logs in the *logs* folder.
 
 ## LLMs Requirements
 
@@ -35,15 +37,15 @@ Please note that this software leverages open-source LLMs reported in the table:
 |-----------|-----------|
 | Llama 3.1 8B Instruct | [HF link](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct) |
 
-Request in advance the permission to use each Llama model for your HuggingFace account.
+Request in advance the permission to use each Llama model for your *HuggingFace* account.
 
 Please note that each of the selected models have specific requirements in terms of GPU availability.
 It is recommended to have access to a GPU-enabled environment meeting at least the minimum requirements for these models to run the software effectively.
 
 ## Running the Project
 Before running the project, it is necessary to insert in the *.env* file:
-- your personal HuggingFace token (request the permission to use the Llama models for this token in advance);
-- the URL and the gRPC port of your Qdrant instance.
+- your personal *HuggingFace token* (request the permission to use the Llama models for this token in advance);
+- the *URL* and the *gRPC port* of your *Qdrant* instance.
 
 Eventually, you can proceed by going in the project directory and run the project in the preferred configuration. For example:
 ```bash

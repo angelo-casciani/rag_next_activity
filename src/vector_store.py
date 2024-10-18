@@ -12,6 +12,21 @@ def initialize_vector_store(url, grpc_port, collection_name, embed_model):
     return qdrant
 
 
+def store_prefixes(prefixes, embed_model, address, port, collection_name):
+    qdrant_store = Qdrant.from_texts(
+        prefixes,
+        embed_model,
+        url=address,
+        prefer_grpc=True,
+        grpc_port=port,
+        collection_name=collection_name,
+    )
+
+    return qdrant_store
+
+
+
+
 def store_vectorized_textual_dfg(file_content, filename, embeds_model, address, port, collection_name):
     if filename.endswith('.txt'):
         source = " ".join(filename.strip(".txt").split("_")[:-2]).capitalize()
