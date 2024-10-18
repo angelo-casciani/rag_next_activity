@@ -19,20 +19,19 @@ def extract_traces(tree):
         for event in trace.findall('{http://www.xes-standard.org/}event'):
             event_str = ET.tostring(event, encoding='unicode')
             event_str = event_str.replace('ns0:', '').replace(' xmlns:ns0="http://www.xes-standard.org/"', '')
-            event_str = event_str.replace('<event>', "\t\t<event>")
             trace_content.append(event_str)
         if len(trace_content) >= 2:
             traces.append(trace_content)
     return traces
 
 
-def generate_prefixes(traces):
-    all_prefixes = []
+def generate_unique_prefixes(traces):
+    all_prefixes = set()
     for trace in traces:
-        for i in range(2, len(trace) + 1):   # To generate prefixes with at least two events
-            prefix = trace[:i]
-            all_prefixes.append(prefix)
-    return all_prefixes
+        for i in range(2, len(trace) + 1):  # To generate prefixes with at least two events
+            prefix = tuple(trace[:i])
+            all_prefixes.add(prefix)
+    return [list(prefix) for prefix in all_prefixes]
 
 
 def generate_training_and_test_set(traces, test_set_size):
@@ -60,7 +59,7 @@ def compute_log_stats(log_name):
     print(f'Total number of events: {total_events}')
     
 
-log_name = 'Hospital_log.xes'
+"""log_name = 'Hospital_log.xes'
 tree_content = read_event_log(log_name)
 # compute_log_stats(tree_content)
 traces = extract_traces(tree_content)
@@ -73,4 +72,4 @@ with open('test.csv', 'r') as csvfile:
         if i < 3:
             print(row)
         else:
-            break
+            break"""

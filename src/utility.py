@@ -27,15 +27,8 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
-def load_process_representation(filename):
-    filepath = os.path.join("..", "data", filename)
-    with open(filepath, 'r') as file:
-        file_content = file.read()
-        return file_content
-
-
 def load_csv_questions(filename):
-    filepath = os.path.join("..", 'data', 'questions', filename)
+    filepath = os.path.join("..", 'tests', 'questions', filename)
     questions = {}
     with open(filepath, newline='') as csvfile:
         reader = csv.reader(csvfile)
@@ -46,7 +39,10 @@ def load_csv_questions(filename):
         return questions
 
 
-def log_to_file(message, curr_datetime):
+def log_to_file(conversation, curr_datetime, info_run):
     filepath = os.path.join("..", "tests", "outputs", f"output_{curr_datetime}.txt")
     with open(filepath, 'a') as file:
-        file.write(message)
+        for key in info_run.keys():
+            file.write(f"{key}: {info_run[key]}\n")
+        file.write('\n###########################################\n\n')
+        file.write(conversation)

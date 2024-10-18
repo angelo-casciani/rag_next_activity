@@ -1,227 +1,52 @@
-from qdrant_client import QdrantClient
+from qdrant_client import QdrantClient, models
 from langchain_community.vectorstores.qdrant import Qdrant
-from langchain_text_splitters import CharacterTextSplitter, RecursiveCharacterTextSplitter
-
-import re
 
 
 def initialize_vector_store(url, grpc_port, collection_name, embed_model):
     client = QdrantClient(url, grpc_port=grpc_port, prefer_grpc=True)
-    qdrant = Qdrant(client, collection_name=collection_name, embeddings=embed_model)
+    store = Qdrant(client, collection_name=collection_name, embeddings=embed_model)
 
-    return qdrant
-
-
-def store_prefixes(prefixes, embed_model, address, port, collection_name):
-    qdrant_store = Qdrant.from_texts(
-        prefixes,
-        embed_model,
-        url=address,
-        prefer_grpc=True,
-        grpc_port=port,
-        collection_name=collection_name,
-    )
-
-    return qdrant_store
+    return client, store
 
 
-
-
-def store_vectorized_textual_dfg(file_content, filename, embeds_model, address, port, collection_name):
-    if filename.endswith('.txt'):
-        source = " ".join(filename.strip(".txt").split("_")[:-2]).capitalize()
-        title = " ".join(filename.strip(".txt").split("_")[-2:]).capitalize()
-    else:
-        source = filename.split(".")[0].capitalize()
-        title = f"{source} Process Model"
-
-    metadata = {'text': file_content, 'source': source, 'title': title}
-
-    qdrant_store = Qdrant.from_texts(
-        [file_content],
-        embeds_model,
-        metadatas=[metadata],
-        url=address,
-        prefer_grpc=True,
-        grpc_port=port,
-        collection_name=collection_name,
-    )
-
-    return qdrant_store
-
-
-def store_fixed_chunked_text(file_content, filename, embeds_model, address, port, collection_name):
-    source = filename.strip('.txt').strip('.bpmn').capitalize()
-    title = f"{source} Model chunk"
-    batch_size = 128
-    qdrant_store = 'No qDrant store.'
-    text_splitter = CharacterTextSplitter(separator="\n", chunk_size=batch_size, chunk_overlap=10)
-    splits = text_splitter.split_text(file_content)
-    all_splits = text_splitter.create_documents(splits)
-
-    for document in all_splits:
-        chunk = document.page_content
-        metadata = {'text': chunk, 'source': source, 'title': title}
-        qdrant_store = Qdrant.from_texts(
-            [chunk],
-            embeds_model,
-            metadatas=[metadata],
-            url=address,
-            prefer_grpc=True,
-            grpc_port=port,
-            collection_name=collection_name,
+def store_prefixes(prefixes, qdrant_client, log_name, embed_model, collection_name):
+    points = []
+    identifier = 0
+    for p in prefixes:
+        p = ''.join(p)
+        metadata = {'page_content': p, 'name': f'{log_name} Chunk {identifier}'}
+        point = models.PointStruct(
+            id=identifier,
+            vector=embed_model.embed_documents([p])[0],
+            payload=metadata
         )
-    return qdrant_store
+        print(f'Processing point {identifier} of {len(prefixes)}...')
+        points.append(point)
+        identifier += 1
 
-
-def store_recursive_chunked_text(file_content, filename, embeds_model, address, port, collection_name):
-    source = filename.strip('.txt').strip('.bpmn').capitalize()
-    title = f"{source} Model chunk"
-    batch_size = 128
-    qdrant_store = 'No qDrant store.'
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=batch_size, chunk_overlap=10)
-    splits = text_splitter.split_text(file_content)
-    all_splits = text_splitter.create_documents(splits)
-
-    for document in all_splits:
-        chunk = document.page_content
-        metadata = {'text': chunk, 'source': source, 'title': title}
-        qdrant_store = Qdrant.from_texts(
-            [chunk],
-            embeds_model,
-            metadatas=[metadata],
-            url=address,
-            prefer_grpc=True,
-            grpc_port=port,
+    print('Storing points into the vector store...')
+    qdrant_client.upsert(
             collection_name=collection_name,
-        )
-    return qdrant_store
-
-
-def store_vectorized_bpmn(bpmn_model, filename, embeds_model, address, port, collection_name):
-    source = filename.strip(".bpmn").capitalize()
-    title = "BPMN Model"
-    metadata = {'text': bpmn_model, 'source': source, 'title': title}
-
-    qdrant_store = Qdrant.from_texts(
-        [bpmn_model],
-        embeds_model,
-        metadatas=[metadata],
-        url=address,
-        prefer_grpc=True,
-        grpc_port=port,
-        collection_name=collection_name,
-    )
-
-    return qdrant_store
-
-
-def store_vectorized_chunked_bpmn(bpmn_model, filename, embeds_model, address, port, collection_name):
-    source = filename.strip(".bpmn").capitalize()
-    title = f"{source} BPMN Model chunk"
-    batch_size = 32
-    qdrant_store = 'No qDrant store.'
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=batch_size, chunk_overlap=15)
-    all_splits = text_splitter.split_documents(bpmn_model)
-
-    for document in all_splits:
-        chunk = document.page_content
-        metadata = {'text': chunk, 'source': source, 'title': title}
-        qdrant_store = Qdrant.from_texts(
-            [chunk],
-            embeds_model,
-            metadatas=[metadata],
-            url=address,
-            prefer_grpc=True,
-            grpc_port=port,
-            collection_name=collection_name,
+            points=points
         )
 
-    return qdrant_store
+    return identifier
 
 
-def store_vectorized_semantically_chunked_bpmn(chunks, filename, embeds_model, address, port, collection_name):
-    source = filename.strip(".bpmn").capitalize()
-    title = f"{source} BPMN Model chunk"
-    qdrant_store = 'No qDrant store.'
-
-    for chunk in chunks:
-        metadata = {'text': chunk, 'source': source, 'title': title}
-        qdrant_store = Qdrant.from_texts(
-            [chunk],
-            embeds_model,
-            metadatas=[metadata],
-            url=address,
-            prefer_grpc=True,
-            grpc_port=port,
-            collection_name=collection_name,
-        )
-
-    return qdrant_store
-
-
-def store_vectorized_text(file_content, filename, embeds_model, address, port, collection_name):
-    source = filename.removesuffix("_output.txt").capitalize()
-    title = f'{source} process parameters'
-    metadata = {'text': file_content, 'source': source, 'title': title}
-
-    qdrant_store = Qdrant.from_texts(
-        [file_content],
-        embeds_model,
-        metadatas=[metadata],
-        url=address,
-        prefer_grpc=True,
-        grpc_port=port,
-        collection_name=collection_name,
-    )
-
-    return qdrant_store
-
-
-def parse_bpmn_in_chunks(content):
-    """
-    Parses the given BPMN content and returns a list of semantic chunks, one for each element.
-
-    Parameters:
-    - content (str): The BPMN content to be parsed.
-
-    Returns:
-    - semantic_chunks (list): A list of semantic chunks extracted from the BPMN content.
-
-    Example:
-    >>> bpmn_content = '<process>...</process>'
-    >>> parse_bpmn_in_chunks(bpmn_content)
-    ['<lane>...</lane>', '<task>...</task>', '<endEvent>...</endEvent>', ...]
-    """
-
-    semantic_chunks = []
-    process_match = re.search(r'<process.*?</process>', content, re.DOTALL)
-    if process_match:
-        process_content = process_match.group(0)
-    else:
-        return []
-
-    element_patterns = [
-        r'<lane.*?</lane>',
-        r'<task.*?</task>',
-        r'<endEvent.*?</endEvent>',
-        r'<startEvent.*?</startEvent>',
-        r'<receiveTask.*?</receiveTask>',
-        r'<exclusiveGateway.*?</exclusiveGateway>',
-        r'<sendTask.*?</sendTask>',
-        r'<parallelGateway.*?</parallelGateway>',
-        r'<textAnnotation.*?</textAnnotation>',
-        r'<sequenceFlow.*?/>',
-        r'<association.*?/>'
-    ]
-    for pattern in element_patterns:
-        semantic_chunks.extend(re.findall(pattern, process_content, re.DOTALL))
-
-    return semantic_chunks
-
-
-def retrieve_context(vector_index, query, num_chunks):
+def retrieve_context(vector_index, query, num_chunks, key=None, search_filter=None):
     retrieved = vector_index.similarity_search(query, num_chunks)
+    if search_filter is not None:
+        filter_ = models.Filter(
+            must=[
+                models.FieldCondition(
+                    key=key,
+                    match=models.MatchValue(value=search_filter)
+                )
+            ]
+        )
+        meta_retrieved = vector_index.similarity_search(query, filter=filter_, k=15)
+        if len(meta_retrieved) > 0:
+            retrieved = meta_retrieved
     retrieved_text = ''
     for i in range(len(retrieved)):
         content = retrieved[i].page_content

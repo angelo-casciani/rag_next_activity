@@ -99,15 +99,10 @@ def generate_prompt_template(model_id):
 
     # template = """{system_message}\n\nContext: {context}\n\nQuestion: {question}\n\nAnswer: """
 
-    template_llama3 = """<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-    {system_message}<|eot_id|>
-    <|start_header_id|>user<|end_header_id|>
-    <|start_context_id|>
-    {context}
-    <|end_context_id|>
-    <|start_question_id|>
-    {question}
-    <|end_question_id|><|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+    template_llama3 = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> {system_message}
+    <|eot_id|><|start_header_id|>user<|end_header_id|>
+    Here is the context: {context}
+    Here is the question: {question} \n <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
     if 'meta-llama/Meta-Llama-3' in model_id or 'llama3dot1' in model_id:
         prompt = PromptTemplate.from_template(template_llama3)
@@ -126,41 +121,48 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
     return chain
 
 
-def produce_answer(question, llm_chain, vectdb, choice, num_chunks, live=False):
-    sys_mess = "Use the following pieces of context to answer the question at the end."
+def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, live=False):
+    sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
+    Your task is to predict the next activity in a given trace of a business process event log. 
+    Use the following pieces of context regarding prefixes of traces to predict the next activity of the prefix provided
+    in the question at the end."""
+    # 'If you don't know the answer, just say that you don't know, don't try to make up an answer.'
     if not live:
         sys_mess = sys_mess + " Answer 'yes' if true or 'no' if false."
-        # "If you don't know the answer, just say that you don't know, don't try to make up an answer."
     context = retrieve_context(vectdb, question, num_chunks)
     complete_answer = llm_chain.invoke({"question": question,
                                         "system_message": sys_mess,
                                         "context": context})
-    if 'meta-llama/Meta-Llama-3' in choice or 'llama3dot1' in choice:
-        index = complete_answer.find('<|start_header_id|>assistant<|end_header_id|>')
-        prompt = complete_answer[:index + len('<|start_header_id|>assistant<|end_header_id|>')]
-        answer = complete_answer[index + len('<|start_header_id|>assistant<|end_header_id|>'):]
-    elif 'Question:' in complete_answer:
-        index = complete_answer.find('Answer: ')
-        prompt = complete_answer[:index]
-        answer = complete_answer[index + len('Answer: '):]
-    else:
-        index = complete_answer.find('[/INST]')
-        prompt = complete_answer[:index + len('[/INST]')]
-        answer = complete_answer[index + len('[/INST]'):]
+    prompt, answer = parse_llm_answer(complete_answer, model_id)
     return prompt, answer
 
 
-def produce_answer_live(question, curr_datetime, model_chain, vectordb, choice, num_chunks):
-    complete_prompt, answer = produce_answer(question, model_chain, vectordb, choice, num_chunks, True)
+def parse_llm_answer(compl_answer, llm_choice):
+    if 'meta-llama/Meta-Llama-3' in llm_choice or 'llama3dot1' in llm_choice:
+        delimiter = '<|start_header_id|>assistant<|end_header_id|>'
+    elif 'Question:' in compl_answer:
+        delimiter = 'Answer: '
+    else:
+        delimiter = '[/INST]'
+
+    index = compl_answer.find(delimiter)
+    prompt = compl_answer[:index + len(delimiter)]
+    answer = compl_answer[index + len(delimiter):]
+
+    return prompt, answer
+
+
+def generate_live_response(question, curr_datetime, model_chain, vectordb, choice_llm, num_chunks, info_run):
+    complete_prompt, answer = produce_answer(question, choice_llm, model_chain, vectordb, num_chunks, True)
     print(f'Prompt: {complete_prompt}\n')
     print(f'Answer: {answer}\n')
     print('--------------------------------------------------')
 
     log_to_file(f'Query: {complete_prompt}\n\nAnswer: {answer}\n\n##########################\n\n',
-                curr_datetime)
+                curr_datetime, info_run)
 
 
-def live_prompting(model1, vect_db, choice, num_chunks):
+def live_prompting(choice_llm, model1, vect_db, num_chunks, info_run):
     current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     while True:
         query = input('Insert the query (type "quit" to exit): ')
@@ -169,11 +171,11 @@ def live_prompting(model1, vect_db, choice, num_chunks):
             print("Exiting the chat.")
             break
 
-        produce_answer_live(query, current_datetime, model1, vect_db, choice, num_chunks)
+        generate_live_response(query, current_datetime, model1, vect_db, choice_llm, num_chunks, info_run)
         print()
 
 
-def evaluate_rag_pipeline(eval_oracle, lang_chain, vect_db, dict_questions, choice, num_chunks):
+"""def evaluate_rag_pipeline(eval_oracle, lang_chain, vect_db, dict_questions, choice, num_chunks, info_run):
     count = 0
     for question, answer in dict_questions.items():
         eval_oracle.add_prompt_expected_answer_pair(question, answer)
@@ -186,4 +188,4 @@ def evaluate_rag_pipeline(eval_oracle, lang_chain, vect_db, dict_questions, choi
         print(f'Processing answer for activity {count} of {len(dict_questions)}...')
 
     print('Validation process completed. Check the output file.')
-    eval_oracle.write_results_to_file()
+    eval_oracle.write_results_to_file(info_run)"""
