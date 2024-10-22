@@ -1,19 +1,22 @@
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig, AutoConfig
-from torch import cuda, bfloat16
+from torch import bfloat16
 
 import datetime
 from utility import log_to_file
 from vector_store import retrieve_context
+
+
+llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct',
+                     'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
+
 
 def initialize_embedding_model(embedding_model_id, dev, batch_size):
     embedding_model = HuggingFaceEmbeddings(
         model_name=embedding_model_id,
         model_kwargs={'device': dev},
         encode_kwargs={'device': dev, 'batch_size': batch_size}
-        # multi_process=True
     )
 
     return embedding_model
@@ -92,23 +95,21 @@ def generate_prompt_template(model_id):
     <<CONTEXT>>
     {context}
     <</CONTEXT>>
-    <<QUESTION>>
+    <<PREFIX>>
     {question}
-    <</QUESTION>>
+    <</PREFIX>>
     <<ANSWER>> [/INST]"""
-
-    # template = """{system_message}\n\nContext: {context}\n\nQuestion: {question}\n\nAnswer: """
 
     template_llama3 = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> {system_message}
     <|eot_id|><|start_header_id|>user<|end_header_id|>
     Here is the context: {context}
-    Here is the question: {question} \n <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+    Here is the prefix: {question} \n <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
-    if 'meta-llama/Meta-Llama-3' in model_id or 'llama3dot1' in model_id:
+    if model_id in llama3_models:
         prompt = PromptTemplate.from_template(template_llama3)
     else:
         prompt = PromptTemplate.from_template(template)
-    
+
     return prompt
 
 
@@ -124,11 +125,11 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
 def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, live=False):
     sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
     Your task is to predict the next activity in a given trace of a business process event log. 
-    Use the following pieces of context regarding prefixes of traces to predict the next activity of the prefix provided
-    in the question at the end."""
+    Use the following pieces of context regarding past traces to predict the next activity of the prefix provided
+    at the end. Refuse to answer if the question doesn't regard that task."""
     # 'If you don't know the answer, just say that you don't know, don't try to make up an answer.'
-    if not live:
-        sys_mess = sys_mess + " Answer 'yes' if true or 'no' if false."
+    # if not live:
+    #    sys_mess = sys_mess + " Answer 'yes' if true or 'no' if false."
     context = retrieve_context(vectdb, question, num_chunks)
     complete_answer = llm_chain.invoke({"question": question,
                                         "system_message": sys_mess,
@@ -138,7 +139,7 @@ def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, live=False
 
 
 def parse_llm_answer(compl_answer, llm_choice):
-    if 'meta-llama/Meta-Llama-3' in llm_choice or 'llama3dot1' in llm_choice:
+    if llm_choice in llama3_models:
         delimiter = '<|start_header_id|>assistant<|end_header_id|>'
     elif 'Question:' in compl_answer:
         delimiter = 'Answer: '

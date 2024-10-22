@@ -42,7 +42,8 @@ def load_csv_questions(filename):
 def log_to_file(conversation, curr_datetime, info_run):
     filepath = os.path.join("..", "tests", "outputs", f"output_{curr_datetime}.txt")
     with open(filepath, 'a') as file:
+        file.write('INFORMATION ON THE RUN\n\n')
         for key in info_run.keys():
             file.write(f"{key}: {info_run[key]}\n")
-        file.write('\n###########################################\n\n')
+        file.write('\n-----------------------------------\n\n')
         file.write(conversation)

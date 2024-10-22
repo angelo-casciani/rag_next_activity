@@ -114,12 +114,16 @@ class AnswerVerificationOracle:
     This method produces in output the results of the validation procedure. 
     """
 
-    def write_results_to_file(self):
+    def write_results_to_file(self, info_run):
         file_path = os.path.join("..", "tests", "validation",
                                  f"results_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt")
         self.compute_stats()
 
         with open(file_path, 'w') as file:
+            file.write('INFORMATION ON THE RUN\n\n')
+            for key in info_run.keys():
+                file.write(f"{key}: {info_run[key]}\n")
+            file.write('\n-----------------------------------\n\n')
             file.write(f"Accuracy: {self.accuracy:.2f}%\n")
             file.write(f"Precision: {self.precision:.2f}%\n")
             file.write(f"Recall: {self.recall:.2f}%\n")
