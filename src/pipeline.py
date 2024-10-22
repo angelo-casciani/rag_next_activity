@@ -59,7 +59,7 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
         model_identifier,
         token=hf_token
     )
-    if 'meta-llama/Meta-Llama-3' in model_identifier or 'llama3dot1' in model_identifier:
+    if model_identifier in llama3_models:
         terminators = [
             tokenizer.eos_token_id,
             tokenizer.convert_tokens_to_ids("<|eot_id|>")
