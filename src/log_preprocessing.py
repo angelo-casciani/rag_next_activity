@@ -25,13 +25,30 @@ def extract_traces(tree):
     return traces
 
 
+# Generates all possible prefixes for each trace (having at least two events)
 def generate_unique_prefixes(traces):
     all_prefixes = set()
     for trace in traces:
-        for i in range(2, len(trace) + 1):  # To generate prefixes with at least two events
+        for i in range(2, len(trace) + 1):
             prefix = tuple(trace[:i])
             all_prefixes.add(prefix)
     return [list(prefix) for prefix in all_prefixes]
+
+
+# Generates all prefixes of length 4 for each trace
+def generate_prefix_windows(traces):
+    prefix_windows = []
+    for trace in traces:
+        for i in range(0, len(trace) + 1, 4):
+            j = i + 4
+            if j > len(trace) + 1:
+                prefix_window = trace[i:]
+            else:
+                prefix_window = trace[i:j]
+            prefix_window = ''.join(prefix_window)
+            if prefix_window not in prefix_windows:
+                prefix_windows.append(prefix_window)
+    return prefix_windows
 
 
 def generate_training_and_test_set(traces, test_set_size):
@@ -59,12 +76,14 @@ def compute_log_stats(log_name):
     print(f'Total number of events: {total_events}')
     
 
-"""log_name = 'Hospital_log.xes'
+log_name = 'Hospital_log.xes'
 tree_content = read_event_log(log_name)
 # compute_log_stats(tree_content)
 traces = extract_traces(tree_content)
-prefixes = generate_prefixes(traces)
-training_set, test_set = generate_training_and_test_set(traces, 10)
+prefixes = generate_prefix_windows(traces)
+print(prefixes[:5])
+print(len(prefixes))
+"""training_set, test_set = generate_training_and_test_set(traces, 10)
 generate_csv_from_test_set(test_set, 'test.csv')
 with open('test.csv', 'r') as csvfile:
     csvreader = csv.reader(csvfile)
