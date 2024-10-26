@@ -3,14 +3,14 @@ from qdrant_client.http.models import Distance, VectorParams
 from langchain_qdrant import Qdrant
 
 
-def initialize_vector_store(url, grpc_port, collection_name, embed_model):
+def initialize_vector_store(url, grpc_port, collection_name, embed_model, dimension):
     client = QdrantClient(url, grpc_port=grpc_port, prefer_grpc=True)
     store = Qdrant(client, collection_name=collection_name, embeddings=embed_model)
 
     if not client.collection_exists(collection_name):
         client.create_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(size=384, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
         )
 
     return client, store
@@ -20,7 +20,6 @@ def store_prefixes(prefixes, qdrant_client, log_name, embed_model, collection_na
     points = []
     identifier = 0
     for p in prefixes:
-        p = ''.join(p)
         metadata = {'page_content': p, 'name': f'{log_name} Chunk {identifier}'}
         point = models.PointStruct(
             id=identifier,
@@ -45,13 +44,37 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
     identifier = 0
     for t in traces:
         t = ''.join(t)
-        metadata = {'page_content': t, 'name': f'{log_name} Chunk {identifier}'}
+        metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
         point = models.PointStruct(
             id=identifier,
             vector=embed_model.embed_documents([t])[0],
             payload=metadata
         )
-        print(f'Processing point {identifier} of {len(traces)}...')
+        print(f'Processing point for trace {identifier} of {len(traces)}...')
+        points.append(point)
+        identifier += 1
+
+    print('Storing points into the vector store...')
+    qdrant_client.upsert(
+            collection_name=collection_name,
+            points=points
+        )
+
+    return identifier
+
+
+def store_traces_concept_names(traces, qdrant_client, log_name, embed_model, collection_name):
+    points = []
+    identifier = 0
+    for t in traces:
+        t = ', '.join(t)
+        metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
+        point = models.PointStruct(
+            id=identifier,
+            vector=embed_model.embed_documents([t])[0],
+            payload=metadata
+        )
+        print(f'Processing point for trace {identifier} of {len(traces)}...')
         points.append(point)
         identifier += 1
 
@@ -82,7 +105,7 @@ def retrieve_context(vector_index, query, num_chunks, key=None, search_filter=No
     for i in range(len(retrieved)):
         content = retrieved[i].page_content
         if i != len(retrieved) - 1:
-            retrieved_text += f'{content}\n\n'
+            retrieved_text += f'\n{content}'
         else:
             retrieved_text += f'{content}'
 

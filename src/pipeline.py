@@ -7,9 +7,8 @@ import datetime
 from utility import log_to_file
 from vector_store import retrieve_context
 
-
 llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct',
-                     'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
+                 'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
 
 
 def initialize_embedding_model(embedding_model_id, dev, batch_size):
@@ -102,7 +101,7 @@ def generate_prompt_template(model_id):
 
     template_llama3 = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> {system_message}
     <|eot_id|><|start_header_id|>user<|end_header_id|>
-    Here is the context: {context}
+    Here is the most similar past traces: {context}
     Here is the prefix: {question} \n <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
 
     if model_id in llama3_models:
@@ -124,9 +123,16 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
 
 def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, live=False):
     sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
-    Your task is to predict the next activity in a given trace of a business process event log. 
-    Use the following pieces of context regarding past traces to predict the next activity of the prefix provided
-    at the end. Refuse to answer if the question doesn't regard that task."""
+    Your task is to answer with the name of the predicted next activity in a given prefix of a trace of an event 
+    log based on the provided most similar past traces.
+    
+    Examples:
+    1. Input (Trace Prefix): 1e consult poliklinisch, administratief tarief - eerste pol, verlosk.-gynaec. korte kaart kosten-out, 
+       Expected Output (Next activity name for that specific trace prefix): echografie - genitalia interna
+    2. Input (Trace Prefix): inwend.geneesk. korte kaart kosten-out, 1e consult poliklinisch, administratief tarief - eerste pol, 
+       Expected Output (Next activity name for that specific trace prefix): verlosk.-gynaec. korte kaart kosten-out
+    """
+    # If the question doesn't regard the prediction task refuse to answer
     # 'If you don't know the answer, just say that you don't know, don't try to make up an answer.'
     # if not live:
     #    sys_mess = sys_mess + " Answer 'yes' if true or 'no' if false."
