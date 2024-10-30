@@ -1,11 +1,13 @@
+import datetime
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig, AutoConfig
 from torch import bfloat16
 
-import datetime
+from oracle import AnswerVerificationOracle
 from utility import log_to_file
 from vector_store import retrieve_context
+
 
 llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct',
                  'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
@@ -182,17 +184,15 @@ def live_prompting(choice_llm, model1, vect_db, num_chunks, info_run):
         print()
 
 
-"""def evaluate_rag_pipeline(eval_oracle, lang_chain, vect_db, dict_questions, choice, num_chunks, info_run):
+def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, dict_questions, info_run):
+    oracle = AnswerVerificationOracle(info_run)
     count = 0
-    for question, answer in dict_questions.items():
-        eval_oracle.add_prompt_expected_answer_pair(question, answer)
-        prompt, answer = produce_answer(question, lang_chain, vect_db, choice, num_chunks)
-        if 'meta-llama/Meta-Llama-3' in choice or 'llama3dot1' in choice:
-            eval_oracle.verify_answer(answer, prompt, True)
-        else:
-            eval_oracle.verify_answer(answer, prompt)
+    for prefix, expected_prediction in dict_questions.items():
+        oracle.add_prefix_with_expected_answer_pair(prefix, expected_prediction)
+        prompt, answer = produce_answer(prefix, choice_llm, lang_chain, vect_db, num_chunks)
+        oracle.verify_answer(prefix, answer)
         count += 1
-        print(f'Processing answer for activity {count} of {len(dict_questions)}...')
+        print(f'Processing prediction for prefix {count} of {len(dict_questions)}...')
 
     print('Validation process completed. Check the output file.')
-    eval_oracle.write_results_to_file(info_run)"""
+    oracle.write_results_to_file(info_run)

@@ -28,15 +28,14 @@ def str2bool(v):
 
 
 def load_csv_questions(filename):
-    filepath = os.path.join("..", 'tests', 'questions', filename)
     questions = {}
-    with open(filepath, newline='') as csvfile:
-        reader = csv.reader(csvfile)
-        next(reader)
-        for row in reader:
-            question, answer = row
-            questions[question] = answer
-        return questions
+    if filename != '':
+        with open(filename, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)
+            for row in reader:
+                questions[row[0]] = row[1]
+    return questions
 
 
 def log_to_file(conversation, curr_datetime, info_run):

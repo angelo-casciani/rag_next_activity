@@ -68,21 +68,26 @@ def extract_traces_concept_names(log_content):
     return traces_list
 
 
-def generate_training_and_test_set(traces, test_set_size):
+# Test set proportion must be a decimal from 0 to 1
+def generate_test_set(traces, test_set_proportion):
+    test_set_size = int(len(traces) * test_set_proportion)
     test_set = random.sample(traces, test_set_size)
-    training_set = [trace for trace in traces if trace not in test_set]
-    return training_set, test_set
+    return test_set
 
 
-def generate_csv_from_test_set(test_set, filename):
-    with open(filename, 'w', newline='') as csvfile:
+def generate_csv_from_test_set(test_set, log_name):
+    test_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'validation',
+                         f"test_set_{log_name.split('.xes')[0]}.csv")
+    with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
-        csvwriter.writerow(['question', 'answer'])
+        csvwriter.writerow(['prefix', 'prediction'])
         for trace in test_set:
             for i in range(1, len(trace)):
-                question = ' '.join(trace[:i])
-                answer = trace[i]
-                csvwriter.writerow([question, answer])
+                prefix = ', '.join(trace[:i])
+                prediction = trace[i]
+                csvwriter.writerow([prefix, prediction])
+    
+    return test_path
 
 
 def compute_log_stats(log_name):
@@ -95,15 +100,15 @@ def compute_log_stats(log_name):
 
 """log_name = 'Hospital_log.xes'
 tree_content = read_event_log(log_name)
-# compute_log_stats(tree_content)
-traces = extract_traces(tree_content)
-print(trace for trace in traces)
-prefixes = generate_prefix_windows(traces)
-print(prefixes[:5])
-print(len(prefixes))
-training_set, test_set = generate_training_and_test_set(traces, 10)
-generate_csv_from_test_set(test_set, 'test.csv')
-with open('test.csv', 'r') as csvfile:
+# print(compute_log_stats(tree_content))
+traces = extract_traces_concept_names(tree_content)
+# print(trace for trace in traces)
+# prefixes = generate_prefix_windows(traces)
+# print(prefixes[:5])
+# print(len(prefixes))
+training_set, test_set = generate_test_set(traces, 0.3)
+test_path = generate_csv_from_test_set(test_set, log_name)
+with open(test_path, 'r') as csvfile:
     csvreader = csv.reader(csvfile)
     for i, row in enumerate(csvreader):
         if i < 3:
