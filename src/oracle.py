@@ -30,7 +30,7 @@ class AnswerVerificationOracle:
         if expected_answer is not None:
             result['expected_answer'] = expected_answer
             result['verification_result'] = expected_answer.lower() in model_answer.lower()
-            print(f"Answer: {model_answer} - Result: {result['verification_result']}")
+            print(f"Answer: {model_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
 
         return result['verification_result']
@@ -62,7 +62,7 @@ class AnswerVerificationOracle:
             file.write('INFORMATION ON THE RUN\n\n')
             for key in self.run_info.keys():
                 file.write(f"{key}: {self.run_info[key]}\n")
-            file.write('\n-----------------------------------\n\n')
+            file.write('\n-----------------------------------\n')
             file.write(f"Accuracy: {self.accuracy:.2f}%\n")
             file.write("-----------------------------------\n\n")
 

@@ -195,4 +195,4 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, dict_ques
         print(f'Processing prediction for prefix {count} of {len(dict_questions)}...')
 
     print('Validation process completed. Check the output file.')
-    oracle.write_results_to_file(info_run)
+    oracle.write_results_to_file()

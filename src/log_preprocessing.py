@@ -75,9 +75,7 @@ def generate_test_set(traces, test_set_proportion):
     return test_set
 
 
-def generate_csv_from_test_set(test_set, log_name):
-    test_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'validation',
-                         f"test_set_{log_name.split('.xes')[0]}.csv")
+def generate_csv_from_test_set(test_set, test_path):
     with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])
@@ -86,8 +84,6 @@ def generate_csv_from_test_set(test_set, log_name):
                 prefix = ', '.join(trace[:i])
                 prediction = trace[i]
                 csvwriter.writerow([prefix, prediction])
-    
-    return test_path
 
 
 def compute_log_stats(log_name):
