@@ -68,6 +68,25 @@ def extract_traces_concept_names(log_content):
     return traces_list
 
 
+def extract_traces_with_attributes(log_content):
+    trace_pattern = re.compile(r'<trace>.*?</trace>', re.DOTALL)
+    event_pattern = re.compile(r'<event>.*?</event>', re.DOTALL)
+    attribute_pattern = re.compile(r'<string key="(.*?)" value="(.*?)"/>')
+    traces_list = []
+    for trace_match in trace_pattern.findall(log_content):
+        trace_content = []
+        for event_match in event_pattern.findall(trace_match):
+            attributes = []
+            for attribute_match in attribute_pattern.findall(event_match):
+                key, value = attribute_match
+                attributes.append(f'{key}: {value}')
+            if attributes:
+                trace_content.append(', '.join(attributes))
+        if len(trace_content) >= 2:
+            traces_list.append(trace_content)
+    return traces_list
+
+
 # Test set proportion must be a decimal from 0 to 1
 def generate_test_set(traces, test_set_proportion):
     test_set_size = int(len(traces) * test_set_proportion)
@@ -80,9 +99,14 @@ def generate_csv_from_test_set(test_set, test_path):
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])
         for trace in test_set:
-            for i in range(1, len(trace)):
-                prefix = ', '.join(trace[:i])
-                prediction = trace[i]
+            if len(trace) <= 3:
+                indices = range(1, len(trace))
+            else:
+                indices = [random.randint(1, len(trace)//2), len(trace)//2,
+                           random.randint(len(trace)//2 + 1, len(trace) - 1)]
+            for index in indices:
+                prefix = ', '.join(trace[:index])
+                prediction = trace[index]
                 csvwriter.writerow([prefix, prediction])
 
 
@@ -92,13 +116,13 @@ def compute_log_stats(log_name):
     print(f'Total number of traces: {len(traces)}')
     total_events = sum(len(trace) for trace in traces)
     print(f'Total number of events: {total_events}')
-    
+
 
 """log_name = 'Hospital_log.xes'
 tree_content = read_event_log(log_name)
 # print(compute_log_stats(tree_content))
-traces = extract_traces_concept_names(tree_content)
-# print(trace for trace in traces)
+traces = extract_traces_with_attributes(tree_content)
+print(traces[0])
 # prefixes = generate_prefix_windows(traces)
 # print(prefixes[:5])
 # print(len(prefixes))

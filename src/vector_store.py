@@ -26,15 +26,15 @@ def store_prefixes(prefixes, qdrant_client, log_name, embed_model, collection_na
             vector=embed_model.embed_documents([p])[0],
             payload=metadata
         )
-        print(f'Processing point {identifier} of {len(prefixes)}...')
+        print(f'Processing point {identifier} of {len(prefixes) - 1}...')
         points.append(point)
         identifier += 1
 
     print('Storing points into the vector store...')
     qdrant_client.upsert(
-            collection_name=collection_name,
-            points=points
-        )
+        collection_name=collection_name,
+        points=points
+    )
 
     return identifier
 
@@ -50,15 +50,15 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
             vector=embed_model.embed_documents([t])[0],
             payload=metadata
         )
-        print(f'Processing point for trace {identifier} of {len(traces)}...')
+        print(f'Processing point for trace {identifier} of {len(traces) - 1}...')
         points.append(point)
         identifier += 1
 
     print('Storing points into the vector store...')
     qdrant_client.upsert(
-            collection_name=collection_name,
-            points=points
-        )
+        collection_name=collection_name,
+        points=points
+    )
 
     return identifier
 
@@ -74,15 +74,15 @@ def store_traces_concept_names(traces, qdrant_client, log_name, embed_model, col
             vector=embed_model.embed_documents([t])[0],
             payload=metadata
         )
-        print(f'Processing point for trace {identifier} of {len(traces)}...')
+        print(f'Processing point for trace {identifier} of {len(traces) - 1}...')
         points.append(point)
         identifier += 1
 
     print('Storing points into the vector store...')
     qdrant_client.upsert(
-            collection_name=collection_name,
-            points=points
-        )
+        collection_name=collection_name,
+        points=points
+    )
 
     return identifier
 

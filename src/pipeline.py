@@ -123,7 +123,7 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
     return chain
 
 
-def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, live=False):
+def produce_answer(question, model_id, llm_chain, vectdb, num_chunks):
     sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
     Your task is to answer with the name of the predicted next activity in a given prefix of a trace of an event 
     log based on the provided most similar past traces.
@@ -162,7 +162,7 @@ def parse_llm_answer(compl_answer, llm_choice):
 
 
 def generate_live_response(question, curr_datetime, model_chain, vectordb, choice_llm, num_chunks, info_run):
-    complete_prompt, answer = produce_answer(question, choice_llm, model_chain, vectordb, num_chunks, True)
+    complete_prompt, answer = produce_answer(question, choice_llm, model_chain, vectordb, num_chunks)
     print(f'Prompt: {complete_prompt}\n')
     print(f'Answer: {answer}\n')
     print('--------------------------------------------------')

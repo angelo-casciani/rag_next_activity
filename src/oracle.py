@@ -9,10 +9,8 @@ class AnswerVerificationOracle:
         self.results = []
         self.run_info = info_run
 
-    
     def add_prefix_with_expected_answer_pair(self, prefix, expected_answer):
         self.prefix_with_expected_answer_pairs[prefix] = expected_answer
-
 
     """ Verifying the answer correctness.
 
@@ -35,7 +33,6 @@ class AnswerVerificationOracle:
 
         return result['verification_result']
 
-
     """ Computing the metrics for the run.
     
        This method computes and stores the metrics for the run.
@@ -46,7 +43,6 @@ class AnswerVerificationOracle:
         correct_results = sum(int(result['verification_result']) for result in self.results)
 
         self.accuracy = (correct_results / total_results) * 100 if total_results > 0 else 0
-
 
     """ Writing the verification results to a file.
 

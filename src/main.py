@@ -9,8 +9,9 @@ import pipeline as p
 import utility as u
 import vector_store as vs
 
-
 DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
+print(DEVICE)
+os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
 URL = os.getenv('QDRANT_URL')
@@ -18,6 +19,7 @@ GRPC_PORT = int(os.getenv('QDRANT_GRPC_PORT'))
 COLLECTION_NAME = 'nap-rag'
 SEED = 10
 warnings.filterwarnings('ignore')
+
 
 # 'sentence-transformers/all-MiniLM-L6-v2'
 # 'sentence-transformers/all-mpnet-base-v2'
@@ -32,14 +34,14 @@ def parse_arguments():
     parser.add_argument('--model_max_length', type=int, help='Maximum input length for the LLM model',
                         default=128000)
     parser.add_argument('--num_documents_in_context', type=int, help='Number of documents in the context',
-                        default=10)
+                        default=5)
     parser.add_argument('--log', type=str, help='The event log to use for the next activity prediction',
                         default='Hospital_log.xes')
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
                         default=512)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
-                        help='Rebuild the vector index and the test set', default=True)
+                        help='Rebuild the vector index and the test set', default=False)
     parser.add_argument('--modality', type=str, default='evaluation')
     args = parser.parse_args()
 
@@ -56,7 +58,7 @@ def main():
     q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
     num_docs = args.num_documents_in_context
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'validation',
-                             f"test_set_{args.log.split('.xes')[0]}.csv")
+                                 f"test_set_{args.log.split('.xes')[0]}.csv")
     if args.rebuild_db_and_tests:
         vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
         q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
@@ -94,10 +96,6 @@ def main():
     if 'evaluation' in args.modality:
         test_dict = u.load_csv_questions(test_set_path)
         p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_dict, run_data)
-        """prompt, answer = p.produce_answer("verlosk.-gynaec. korte kaart kosten-out, histologisch onderzoek - biopten nno, ",
-                                          model_id, chain, q_store, num_docs)
-        print(prompt)
-        print(answer)"""
     else:
         p.live_prompting(model_id, chain, q_store, num_docs, run_data)
 
