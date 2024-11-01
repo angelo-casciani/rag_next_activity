@@ -123,21 +123,32 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
     return chain
 
 
-def produce_answer(question, model_id, llm_chain, vectdb, num_chunks):
+def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
+    modality = info_run['Evaluation Modality']
     sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
     Your task is to answer with the name of the predicted next activity in a given prefix of a trace of an event 
-    log based on the provided most similar past traces.
-    
+    log based on the provided most similar past traces."""
+    if modality == 'evaluation-attributes':
+        sys_mess = sys_mess + """
     Examples:
+    1. Input (Trace Prefix): Initiate Process, Collect Documents, Verify Information, Supervisor Review, Approve Request, 
+       Expected Output (Next activity name for that specific trace prefix): Archive Record
+    2. Input (Trace Prefix): Receive Order, Validate Order Details, Check Inventory, Reserve Stock, Process Payment,
+       Expected Output (Next activity name for that specific trace prefix): Prepare Shipment"""
+    else:
+        sys_mess = sys_mess + """
+    Examples:
+    1. Input (Trace Prefix): Initiate Process, Collect Documents, Verify Information, Supervisor Review, Approve Request, 
+       Expected Output (Next activity name for that specific trace prefix): Archive Record
+    2. Input (Trace Prefix): Receive Order, Validate Order Details, Check Inventory, Reserve Stock, Process Payment,
+       Expected Output (Next activity name for that specific trace prefix): Prepare Shipment"""
+
+    """Examples:
     1. Input (Trace Prefix): 1e consult poliklinisch, administratief tarief - eerste pol, verlosk.-gynaec. korte kaart kosten-out, 
        Expected Output (Next activity name for that specific trace prefix): echografie - genitalia interna
     2. Input (Trace Prefix): inwend.geneesk. korte kaart kosten-out, 1e consult poliklinisch, administratief tarief - eerste pol, 
        Expected Output (Next activity name for that specific trace prefix): verlosk.-gynaec. korte kaart kosten-out
     """
-    # If the question doesn't regard the prediction task refuse to answer
-    # 'If you don't know the answer, just say that you don't know, don't try to make up an answer.'
-    # if not live:
-    #    sys_mess = sys_mess + " Answer 'yes' if true or 'no' if false."
     context = retrieve_context(vectdb, question, num_chunks)
     complete_answer = llm_chain.invoke({"question": question,
                                         "system_message": sys_mess,
@@ -162,7 +173,7 @@ def parse_llm_answer(compl_answer, llm_choice):
 
 
 def generate_live_response(question, curr_datetime, model_chain, vectordb, choice_llm, num_chunks, info_run):
-    complete_prompt, answer = produce_answer(question, choice_llm, model_chain, vectordb, num_chunks)
+    complete_prompt, answer = produce_answer(question, choice_llm, model_chain, vectordb, num_chunks, info_run)
     print(f'Prompt: {complete_prompt}\n')
     print(f'Answer: {answer}\n')
     print('--------------------------------------------------')
@@ -189,7 +200,7 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, dict_ques
     count = 0
     for prefix, expected_prediction in dict_questions.items():
         oracle.add_prefix_with_expected_answer_pair(prefix, expected_prediction)
-        prompt, answer = produce_answer(prefix, choice_llm, lang_chain, vect_db, num_chunks)
+        prompt, answer = produce_answer(prefix, choice_llm, lang_chain, vect_db, num_chunks, info_run)
         oracle.verify_answer(prefix, answer)
         count += 1
         print(f'Processing prediction for prefix {count} of {len(dict_questions)}...')

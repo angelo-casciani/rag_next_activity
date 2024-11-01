@@ -49,5 +49,5 @@ Before running the project, it is necessary to insert in the *.env* file:
 
 Eventually, you can proceed by going in the project directory and run the project in the preferred configuration. For example:
 ```bash
-python3 main.py
+python3 src/main.py
 ```

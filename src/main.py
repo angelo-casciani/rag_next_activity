@@ -10,7 +10,6 @@ import utility as u
 import vector_store as vs
 
 DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
-print(DEVICE)
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
@@ -42,7 +41,7 @@ def parse_arguments():
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
                         help='Rebuild the vector index and the test set', default=False)
-    parser.add_argument('--modality', type=str, default='evaluation')
+    parser.add_argument('--modality', type=str, default='evaluation-only-concept_names')
     args = parser.parse_args()
 
     return args
@@ -62,15 +61,11 @@ def main():
     if args.rebuild_db_and_tests:
         vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
         q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
-        """
-        tree_content = lp.read_event_log(args.log)
-        traces_list = lp.extract_traces(tree_content)
-        prefixes = lp.generate_prefix_windows(traces_list)
-        vs.store_prefixes(prefixes, q_client, args.log, embed_model, COLLECTION_NAME)
-        """
-        # vs.store_traces(traces, q_client, args.log, embed_model, COLLECTION_NAME)
         content = lp.read_event_log(args.log)
-        traces = lp.extract_traces_concept_names(content)
+        if 'evaluation-attributes' in args.modality:
+            traces = lp.extract_traces_with_attributes(content)
+        else:
+            traces = lp.extract_traces_concept_names(content)
         test_set = lp.generate_test_set(traces, 0.2)
         traces_retrieval = [trace for trace in traces if trace not in test_set]
         lp.generate_csv_from_test_set(test_set, test_set_path)
@@ -93,7 +88,7 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests
     }
 
-    if 'evaluation' in args.modality:
+    if 'evaluation-only-concept_names' in args.modality or 'evaluation-attributes' in args.modality:
         test_dict = u.load_csv_questions(test_set_path)
         p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_dict, run_data)
     else:
