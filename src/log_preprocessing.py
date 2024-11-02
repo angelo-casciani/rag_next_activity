@@ -118,12 +118,12 @@ def compute_log_stats(log_name):
     print(f'Total number of events: {total_events}')
 
 
-"""log_name = 'Hospital_log.xes'
+log_name = 'Hospital_log.xes'
 tree_content = read_event_log(log_name)
 # print(compute_log_stats(tree_content))
 traces = extract_traces_with_attributes(tree_content)
 print(traces[0])
-# prefixes = generate_prefix_windows(traces)
+"""# prefixes = generate_prefix_windows(traces)
 # print(prefixes[:5])
 # print(len(prefixes))
 training_set, test_set = generate_test_set(traces, 0.3)

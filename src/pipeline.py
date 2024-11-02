@@ -130,25 +130,26 @@ def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
     log based on the provided most similar past traces."""
     if modality == 'evaluation-attributes':
         sys_mess = sys_mess + """
-    Examples:
-    1. Input (Trace Prefix): Initiate Process, Collect Documents, Verify Information, Supervisor Review, Approve Request, 
-       Expected Output (Next activity name for that specific trace prefix): Archive Record
-    2. Input (Trace Prefix): Receive Order, Validate Order Details, Check Inventory, Reserve Stock, Process Payment,
-       Expected Output (Next activity name for that specific trace prefix): Prepare Shipment"""
+        Examples:
+           concept:name: Initiate Process, org:resource: Employee, time:timestamp: 2022-12-30T18:47:39.452+01:00, lifecycle:transition: complete -> concept:name: Collect Documents, org:resource: Employee, time:timestamp: 2022-12-30T18:57:42.452+01:00, lifecycle:transition: complete -> concept:name: Verify Information, org:resource: Employee, time:timestamp: 2022-12-30T19:00:36.452+01:00, lifecycle:transition: complete -> concept:name: Supervisor Review, org:resource: Supervisor, time:timestamp: 2022-12-30T19:07:05.452+01:00, lifecycle:transition: complete -> concept:name: Approve Request, org:resource: Supervisor, time:timestamp: 2022-12-30T19:27:33.452+01:00, lifecycle:transition: complete -> 
+           Expected Output (Next activity name for that specific trace prefix):
+           concept:name: Archive Record, org:resource: Employee, time:timestamp: 2022-12-30T19:35:59.452+01:00, lifecycle:transition: complete
+        2. Input (Trace Prefix):
+           concept:name: Receive Order, org:resource: Sales Assistant, time:timestamp: 2024-09-15T08:00:59.452+01:00, lifecycle:transition: complete -> concept:name: Validate Order Details, org:resource: Sales Assistant, time:timestamp: 2024-09-15T08:15:00.452+01:00, lifecycle:transition: complete -> concept:name: Check Inventory, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T08:30:00.452+01:00, lifecycle:transition: complete -> concept:name: Reserve Stock, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T08:45:00.452+01:00, lifecycle:transition: complete -> concept:name: Process Payment, org:resource: Finance Officer, time:timestamp: 2024-09-15T09:00:00.452+01:00, lifecycle:transition: complete -> 
+           Expected Output (Next activity name for that specific trace prefix):
+           concept:name: Prepare Shipment, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T09:15:00.452+01:00, lifecycle:transition: complete"""
     else:
         sys_mess = sys_mess + """
     Examples:
-    1. Input (Trace Prefix): Initiate Process, Collect Documents, Verify Information, Supervisor Review, Approve Request, 
-       Expected Output (Next activity name for that specific trace prefix): Archive Record
-    2. Input (Trace Prefix): Receive Order, Validate Order Details, Check Inventory, Reserve Stock, Process Payment,
-       Expected Output (Next activity name for that specific trace prefix): Prepare Shipment"""
+    1. Input (Trace Prefix):
+       Initiate Process -> Collect Documents -> Verify Information -> Supervisor Review -> Approve Request -> 
+       Expected Output (Next activity name for that specific trace prefix):
+       Archive Record
+    2. Input (Trace Prefix):
+       Receive Order -> Validate Order Details -> Check Inventory -> Reserve Stock -> Process Payment -> 
+       Expected Output (Next activity name for that specific trace prefix):
+       Prepare Shipment"""
 
-    """Examples:
-    1. Input (Trace Prefix): 1e consult poliklinisch, administratief tarief - eerste pol, verlosk.-gynaec. korte kaart kosten-out, 
-       Expected Output (Next activity name for that specific trace prefix): echografie - genitalia interna
-    2. Input (Trace Prefix): inwend.geneesk. korte kaart kosten-out, 1e consult poliklinisch, administratief tarief - eerste pol, 
-       Expected Output (Next activity name for that specific trace prefix): verlosk.-gynaec. korte kaart kosten-out
-    """
     context = retrieve_context(vectdb, question, num_chunks)
     complete_answer = llm_chain.invoke({"question": question,
                                         "system_message": sys_mess,

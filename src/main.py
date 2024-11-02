@@ -69,7 +69,7 @@ def main():
         test_set = lp.generate_test_set(traces, 0.2)
         traces_retrieval = [trace for trace in traces if trace not in test_set]
         lp.generate_csv_from_test_set(test_set, test_set_path)
-        vs.store_traces_concept_names(traces_retrieval, q_client, args.log, embed_model, COLLECTION_NAME)
+        vs.store_traces(traces_retrieval, q_client, args.log, embed_model, COLLECTION_NAME)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
