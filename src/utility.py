@@ -1,9 +1,13 @@
+import argparse
 import csv
+import numpy as np
 import os
 import torch
 import random
-import argparse
-import numpy as np
+import sys
+
+
+csv.field_size_limit(sys.maxsize)
 
 
 def seed_everything(seed=10):

@@ -79,7 +79,8 @@ def extract_traces_with_attributes(log_content):
             attributes = []
             for attribute_match in attribute_pattern.findall(event_match):
                 key, value = attribute_match
-                attributes.append(f'{key}: {value}')
+                if key != "lifecycle:transition":
+                    attributes.append(f'{key}: {value}')
             if attributes:
                 trace_content.append(', '.join(attributes))
         if len(trace_content) >= 2:
