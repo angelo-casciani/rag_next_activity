@@ -1,0 +1,49 @@
+prefix,prediction
+Create Fine;,Send Fine
+Create Fine; Send Fine; Insert Fine Notification; Add penalty;,Receive Result Appeal from Prefecture
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge;,Add penalty
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture;,Add penalty
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture;,Notify Result Appeal to Offender
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender;,Appeal to Judge
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender;,Send for Credit Collection
+Create Fine; Send Fine; Insert Date Appeal to Prefecture; Insert Fine Notification;,Appeal to Judge
+Create Fine; Send Fine; Insert Date Appeal to Prefecture; Insert Fine Notification; Send Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture;,Notify Result Appeal to Offender
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Payment; Payment;,Send for Credit Collection
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Send Appeal to Prefecture; Receive Result Appeal from Prefecture;,Notify Result Appeal to Offender
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Appeal to Judge; Send Appeal to Prefecture; Add penalty;,Receive Result Appeal from Prefecture
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Appeal to Judge; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Appeal to Judge; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Appeal to Judge; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Receive Result Appeal from Prefecture;,Insert Date Appeal to Prefecture
+Create Fine; Send Fine; Insert Fine Notification; Receive Result Appeal from Prefecture; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Add penalty;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Payment; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Date Appeal to Prefecture; Insert Fine Notification; Appeal to Judge; Send Appeal to Prefecture; Add penalty;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Payment;,Add penalty
+Create Fine; Send Fine; Insert Fine Notification; Payment; Add penalty; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Receive Result Appeal from Prefecture; Send Appeal to Prefecture;,Notify Result Appeal to Offender
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Send Appeal to Prefecture; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Appeal to Judge; Payment;,Payment
+Create Fine; Send Fine; Insert Date Appeal to Prefecture; Payment;,Send Appeal to Prefecture
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Send Appeal to Prefecture; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Send Appeal to Prefecture; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Receive Result Appeal from Prefecture; Send Appeal to Prefecture;,Notify Result Appeal to Offender
+Create Fine; Insert Date Appeal to Prefecture; Send Fine; Insert Fine Notification;,Send Appeal to Prefecture
+Create Fine; Insert Date Appeal to Prefecture; Send Fine; Insert Fine Notification; Send Appeal to Prefecture; Add penalty; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Insert Date Appeal to Prefecture; Payment; Payment;,Payment
+Create Fine; Payment; Send Fine; Insert Fine Notification;,Add penalty
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Appeal to Judge; Add penalty;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Appeal to Judge; Add penalty; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Appeal to Judge; Add penalty; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Send Appeal to Prefecture; Receive Result Appeal from Prefecture; Add penalty;,Notify Result Appeal to Offender
+Create Fine; Send Fine; Insert Fine Notification; Add penalty; Receive Result Appeal from Prefecture; Notify Result Appeal to Offender; Appeal to Judge;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Appeal to Judge; Add penalty; Insert Date Appeal to Prefecture; Send Appeal to Prefecture;,Payment
+Create Fine; Send Fine; Insert Date Appeal to Prefecture; Send Appeal to Prefecture;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Insert Date Appeal to Prefecture; Add penalty; Send Appeal to Prefecture; Payment;,Payment
+Create Fine; Send Fine; Insert Fine Notification; Payment; Add penalty; Insert Date Appeal to Prefecture; Send Appeal to Prefecture;,Payment

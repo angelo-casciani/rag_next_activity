@@ -67,7 +67,6 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
     points = []
     identifier = 0
     for t in traces:
-        t = ' -> '.join(t)
         metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
         point = models.PointStruct(
             id=identifier,
@@ -104,10 +103,7 @@ def retrieve_context(vector_index, query, num_chunks, key=None, search_filter=No
     retrieved_text = ''
     for i in range(len(retrieved)):
         content = retrieved[i].page_content
-        if i != len(retrieved) - 1:
-            retrieved_text += f'\n{content}'
-        else:
-            retrieved_text += f'{content}'
+        retrieved_text += f'\n{content}'
 
     return retrieved_text
 

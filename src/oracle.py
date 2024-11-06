@@ -17,8 +17,9 @@ class AnswerVerificationOracle:
     This method checks whether the model's answer matches the expected answer for a given prompt.
     """
 
-    def verify_answer(self, prefix, model_answer):
+    def verify_answer(self, prompt, prefix, model_answer):
         result = {
+            'prompt': prompt,
             'prefix': prefix,
             'model_answer': model_answer,
             'expected_answer': None,
@@ -63,7 +64,7 @@ class AnswerVerificationOracle:
             file.write("-----------------------------------\n\n")
 
             for result in self.results:
-                file.write(f"Prefix: {result['prefix']}\n")
+                file.write(f"Prompt: {result['prompt']}\n")
                 file.write(f"Model Answer: {result['model_answer']}\n")
                 file.write(f"Expected Answer: {result['expected_answer']}\n")
                 file.write(f"Verification Result: {result['verification_result']}\n")

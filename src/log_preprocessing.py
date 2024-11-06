@@ -64,28 +64,33 @@ def extract_traces_concept_names(log_content):
                 concept_name = concept_name_match.group(1)
                 trace_content.append(concept_name)
         if len(trace_content) >= 2:
-            traces_list.append(trace_content)
+            traces_list.append('; '.join(trace_content))
+    traces_list = list(dict.fromkeys(traces_list))
     return traces_list
 
 
 def extract_traces_with_attributes(log_content):
     trace_pattern = re.compile(r'<trace>.*?</trace>', re.DOTALL)
     event_pattern = re.compile(r'<event>.*?</event>', re.DOTALL)
-    attribute_pattern = re.compile(r'<string key="(.*?)" value="(.*?)"/>')
+    attribute_pattern = re.compile(r'key="(.*?)" value="(.*?)"/>')
     traces_list = []
+    keys = []
     for trace_match in trace_pattern.findall(log_content):
         trace_content = []
         for event_match in event_pattern.findall(trace_match):
             attributes = []
             for attribute_match in attribute_pattern.findall(event_match):
                 key, value = attribute_match
-                if key != "lifecycle:transition":
-                    attributes.append(f'{key}: {value}')
+                if key != "lifecycle:transition" and key != "time:timestamp":
+                    attributes.append(value)
+                    if key not in keys:
+                        keys.append(key)
             if attributes:
-                trace_content.append(', '.join(attributes))
+                trace_content.append(','.join(attributes))
         if len(trace_content) >= 2:
-            traces_list.append(trace_content)
-    return traces_list
+            traces_list.append('; '.join(trace_content))
+    traces_list = list(dict.fromkeys(traces_list))
+    return traces_list, keys
 
 
 # Test set proportion must be a decimal from 0 to 1
@@ -95,20 +100,30 @@ def generate_test_set(traces, test_set_proportion):
     return test_set
 
 
-def generate_csv_from_test_set(test_set, test_path):
+def generate_csv_from_test_set(test_set, test_path, base=1, gap=3):
+    tests = {}
+    for trace in test_set:
+        trace = trace.split('; ')
+        """prefix = '; '.join(trace[:-1]) + ';'
+        prediction = trace[-1]
+        csvwriter.writerow([prefix, prediction])"""
+        """if len(trace) <= 3:
+            indices = range(1, len(trace))
+        else:
+            indices = [random.randint(1, len(trace)//2), len(trace)//2,
+                       random.randint(len(trace)//2 + 1, len(trace) - 1)]"""
+        indices = [i for i in range(base, len(trace), gap)]
+        for index in indices:
+            if index < len(trace):
+                prefix = '; '.join(trace[:index]) + ';'
+                prediction = trace[index]
+                tests[prefix] = prediction
+
     with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])
-        for trace in test_set:
-            if len(trace) <= 3:
-                indices = range(1, len(trace))
-            else:
-                indices = [random.randint(1, len(trace)//2), len(trace)//2,
-                           random.randint(len(trace)//2 + 1, len(trace) - 1)]
-            for index in indices:
-                prefix = ', '.join(trace[:index])
-                prediction = trace[index]
-                csvwriter.writerow([prefix, prediction])
+        for pref, pred in tests.items():
+            csvwriter.writerow([pref, pred])
 
 
 def compute_log_stats(log_name):
@@ -117,22 +132,3 @@ def compute_log_stats(log_name):
     print(f'Total number of traces: {len(traces)}')
     total_events = sum(len(trace) for trace in traces)
     print(f'Total number of events: {total_events}')
-
-
-log_name = 'Hospital_log.xes'
-tree_content = read_event_log(log_name)
-# print(compute_log_stats(tree_content))
-traces = extract_traces_with_attributes(tree_content)
-print(traces[0])
-"""# prefixes = generate_prefix_windows(traces)
-# print(prefixes[:5])
-# print(len(prefixes))
-training_set, test_set = generate_test_set(traces, 0.3)
-test_path = generate_csv_from_test_set(test_set, log_name)
-with open(test_path, 'r') as csvfile:
-    csvreader = csv.reader(csvfile)
-    for i, row in enumerate(csvreader):
-        if i < 3:
-            print(row)
-        else:
-            break"""

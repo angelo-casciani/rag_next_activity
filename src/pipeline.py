@@ -1,4 +1,7 @@
 import datetime
+import json
+import os
+
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig, AutoConfig
@@ -89,26 +92,15 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
 
 
 def generate_prompt_template(model_id):
-    template = """<s>[INST]
-    <<SYS>>
-    {system_message}
-    <</SYS>>
-    <<CONTEXT>>
-    {context}
-    <</CONTEXT>>
-    <<PREFIX>>
-    {question}
-    <</PREFIX>>
-    <<ANSWER>> [/INST]"""
-
-    template_llama3 = """<|begin_of_text|><|start_header_id|>system<|end_header_id|> {system_message}
-    <|eot_id|><|start_header_id|>user<|end_header_id|>
-    Here is the most similar past traces: {context}
-    Here is the prefix: {question} \n <|eot_id|><|start_header_id|>assistant<|end_header_id|>"""
+    path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+    with open(path_prompts, 'r') as prompt_file:
+        prompts = json.load(prompt_file)
 
     if model_id in llama3_models:
-        prompt = PromptTemplate.from_template(template_llama3)
+        template = prompts.get('template-llama_instruct', '')
+        prompt = PromptTemplate.from_template(template)
     else:
+        template = prompts.get('template-generic', '')
         prompt = PromptTemplate.from_template(template)
 
     return prompt
@@ -125,30 +117,14 @@ def initialize_chain(model_id, hf_auth, max_new_tokens):
 
 def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
     modality = info_run['Evaluation Modality']
-    sys_mess = """You are a conversational Process Mining assistant specialized in predicting process monitoring.
-    Your task is to answer with the name of the predicted next activity in a given prefix of a trace of an event 
-    log based on the provided most similar past traces."""
+    path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+    with open(path_prompts, 'r') as prompt_file:
+        prompts = json.load(prompt_file)
+    sys_mess = prompts.get('system_message', '')
     if modality == 'evaluation-attributes':
-        sys_mess = sys_mess + """
-        Examples:
-           concept:name: Initiate Process, org:resource: Employee, time:timestamp: 2022-12-30T18:47:39.452+01:00, lifecycle:transition: complete -> concept:name: Collect Documents, org:resource: Employee, time:timestamp: 2022-12-30T18:57:42.452+01:00, lifecycle:transition: complete -> concept:name: Verify Information, org:resource: Employee, time:timestamp: 2022-12-30T19:00:36.452+01:00, lifecycle:transition: complete -> concept:name: Supervisor Review, org:resource: Supervisor, time:timestamp: 2022-12-30T19:07:05.452+01:00, lifecycle:transition: complete -> concept:name: Approve Request, org:resource: Supervisor, time:timestamp: 2022-12-30T19:27:33.452+01:00, lifecycle:transition: complete -> 
-           Expected Output (Next activity name for that specific trace prefix):
-           concept:name: Archive Record, org:resource: Employee, time:timestamp: 2022-12-30T19:35:59.452+01:00, lifecycle:transition: complete
-        2. Input (Trace Prefix):
-           concept:name: Receive Order, org:resource: Sales Assistant, time:timestamp: 2024-09-15T08:00:59.452+01:00, lifecycle:transition: complete -> concept:name: Validate Order Details, org:resource: Sales Assistant, time:timestamp: 2024-09-15T08:15:00.452+01:00, lifecycle:transition: complete -> concept:name: Check Inventory, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T08:30:00.452+01:00, lifecycle:transition: complete -> concept:name: Reserve Stock, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T08:45:00.452+01:00, lifecycle:transition: complete -> concept:name: Process Payment, org:resource: Finance Officer, time:timestamp: 2024-09-15T09:00:00.452+01:00, lifecycle:transition: complete -> 
-           Expected Output (Next activity name for that specific trace prefix):
-           concept:name: Prepare Shipment, org:resource: Warehouse Manager, time:timestamp: 2024-09-15T09:15:00.452+01:00, lifecycle:transition: complete"""
+        sys_mess += prompts.get('evaluation-attributes_shots', '').replace('REPLACE', info_run['Event Attributes'])
     else:
-        sys_mess = sys_mess + """
-    Examples:
-    1. Input (Trace Prefix):
-       Initiate Process -> Collect Documents -> Verify Information -> Supervisor Review -> Approve Request -> 
-       Expected Output (Next activity name for that specific trace prefix):
-       Archive Record
-    2. Input (Trace Prefix):
-       Receive Order -> Validate Order Details -> Check Inventory -> Reserve Stock -> Process Payment -> 
-       Expected Output (Next activity name for that specific trace prefix):
-       Prepare Shipment"""
+        sys_mess += prompts.get('few_shots', '')
 
     context = retrieve_context(vectdb, question, num_chunks)
     complete_answer = llm_chain.invoke({"question": question,
@@ -202,7 +178,8 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, dict_ques
     for prefix, expected_prediction in dict_questions.items():
         oracle.add_prefix_with_expected_answer_pair(prefix, expected_prediction)
         prompt, answer = produce_answer(prefix, choice_llm, lang_chain, vect_db, num_chunks, info_run)
-        oracle.verify_answer(prefix, answer)
+        print(f'Prompt: {prompt}\n')
+        oracle.verify_answer(prompt, prefix, answer)
         count += 1
         print(f'Processing prediction for prefix {count} of {len(dict_questions)}...')
 
