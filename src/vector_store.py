@@ -103,7 +103,7 @@ def retrieve_context(vector_index, query, num_chunks, key=None, search_filter=No
     retrieved_text = ''
     for i in range(len(retrieved)):
         content = retrieved[i].page_content
-        retrieved_text += f'\n{content}'
+        retrieved_text += f'\n{i+1}. {content}'
 
     return retrieved_text
 

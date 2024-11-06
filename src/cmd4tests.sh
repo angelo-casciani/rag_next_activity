@@ -1,9 +1,9 @@
 #!/bin/bash
 
+# Evaluation of Llama 3.1 Instruct on Road Traffic Fine Management Log ONLY concept names
+python3 src/main.py --log Road_Traffic_Fine_Management_Process.xes --modality evaluation-concept_names --rebuild_db_and_tests True --log_gap 3
 # Evaluation of Llama 3.1 Instruct on Hospital Log ONLY concept names
 python3 src/main.py --log Hospital_log.xes --modality evaluation-concept_names --rebuild_db_and_tests True
-# Evaluation of Llama 3.1 Instruct on Road Traffic Fine Management Log ONLY concept names
-# python3 src/main.py --log Road_Traffic_Fine_Management_Process.xes --modality evaluation-concept_names --rebuild_db_and_tests True --log_gap 3
 # Evaluation of Llama 3.1 Instruct on Hospital Billing Log ONLY concept names
 python3 src/main.py --log Hospital_billing.xes --modality evaluation-concept_names --rebuild_db_and_tests True
 # Evaluation of Llama 3.1 Instruct on sintetico-1-1 Log ONLY concept names
@@ -18,10 +18,10 @@ python3 src/main.py --log sintetico-5-online-shopping.xes --modality evaluation-
 python3 src/main.py --log sintetico-5-online-shopping-alt.xes --modality evaluation-concept_names --rebuild_db_and_tests True
 
 
-# Evaluation of Llama 3.1 Instruct on Hospital Log with log attributes
-# python3 src/main.py --log Hospital_log.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
 # Evaluation of Llama 3.1 Instruct on Road Traffic Fine Management Log with log attributes
 # python3 src/main.py --log Road_Traffic_Fine_Management_Process.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
+# Evaluation of Llama 3.1 Instruct on Hospital Log with log attributes
+# python3 src/main.py --log Hospital_log.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
 # Evaluation of Llama 3.1 Instruct on Hospital Billing Log with log attributes
 # python3 src/main.py --log Hospital_billing.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
 # Evaluation of Llama 3.1 Instruct on sintetico-1-1 Log with log attributes
