@@ -82,7 +82,7 @@ def extract_traces_with_attributes(log_content):
             for attribute_match in attribute_pattern.findall(event_match):
                 key, value = attribute_match
                 if key != "lifecycle:transition" and key != "time:timestamp":
-                    attributes.append(value)
+                    attributes.append(f'{key} {value}')
                     if key not in keys:
                         keys.append(key)
             if attributes:
@@ -116,7 +116,7 @@ def generate_csv_from_test_set(test_set, test_path, base=1, gap=3):
         for index in indices:
             if index < len(trace):
                 prefix = '; '.join(trace[:index]) + ';'
-                prediction = trace[index]
+                prediction = trace[index].split('concept:name ')[1].split(',')[0]
                 tests[prefix] = prediction
 
     with open(test_path, 'w', newline='') as csvfile:
