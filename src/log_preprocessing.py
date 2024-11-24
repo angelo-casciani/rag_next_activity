@@ -101,7 +101,7 @@ def generate_test_set(traces, test_set_proportion):
 
 
 def generate_csv_from_test_set(test_set, test_path, base=1, gap=3):
-    tests = {}
+    tests = []
     for trace in test_set:
         trace = trace.split('; ')
         """prefix = '; '.join(trace[:-1]) + ';'
@@ -117,13 +117,13 @@ def generate_csv_from_test_set(test_set, test_path, base=1, gap=3):
             if index < len(trace):
                 prefix = '; '.join(trace[:index]) + ';'
                 prediction = trace[index].split('concept:name ')[1].split(',')[0]
-                tests[prefix] = prediction
+                tests.append([prefix, prediction])
 
     with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])
-        for pref, pred in tests.items():
-            csvwriter.writerow([pref, pred])
+        for pair in tests:
+            csvwriter.writerow([pair[0], pair[1]])
 
 
 def compute_log_stats(log_name):
@@ -132,3 +132,14 @@ def compute_log_stats(log_name):
     print(f'Total number of traces: {len(traces)}')
     total_events = sum(len(trace) for trace in traces)
     print(f'Total number of events: {total_events}')
+
+
+def main():
+    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets', f"test_set_Road_Traffic_Fine.csv")
+    content = read_event_log('Road_Traffic_Fine_Management_Process.xes')
+    traces, event_attributes = extract_traces_with_attributes(content)
+    test_set = generate_test_set(traces, 0.2)
+    generate_csv_from_test_set(test_set=test_set, test_path=test_set_path)
+
+if __name__ == '__main__':
+    main()

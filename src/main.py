@@ -13,6 +13,7 @@ DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 URL = os.getenv('QDRANT_URL')
 GRPC_PORT = int(os.getenv('QDRANT_GRPC_PORT'))
 COLLECTION_NAME = 'nap-rag'
@@ -79,8 +80,8 @@ def main():
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
-    chain = p.initialize_chain(model_id, HF_AUTH, max_new_tokens)
-
+    chain = p.initialize_chain(model_id, HF_AUTH, OPENAI_API_KEY, max_new_tokens)
+    
     run_data = {
         'Batch Size': args.batch_size,
         'Embedding Model ID': embed_model_id,

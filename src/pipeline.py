@@ -4,6 +4,7 @@ import os
 
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
+from openai import OpenAI
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig, AutoConfig
 from torch import bfloat16
 
@@ -12,8 +13,12 @@ from utility import log_to_file
 from vector_store import retrieve_context
 
 
-llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Llama-3.1-8B-Instruct',
+llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Meta-Llama-3.1-8B-Instruct',
                  'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
+mistral_models = ['mistralai/Mistral-7B-Instruct-v0.2',  'mistralai/Mistral-7B-Instruct-v0.3',
+                  'mistralai/Mistral-Nemo-Instruct-2407', 'mistralai/Ministral-8B-Instruct-2410']
+qwen_models = ['Qwen/Qwen2.5-7B-Instruct']
+openai_models = ['gpt-4o-mini']
 
 
 def initialize_embedding_model(embedding_model_id, dev, batch_size):
@@ -78,6 +83,36 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
             max_new_tokens=max_new_tokens,
             repetition_penalty=1.1
         )
+    elif model_identifier in mistral_models:
+        terminators = [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("[/INST]]")
+        ]
+        generate_text = pipeline(
+            model=model, tokenizer=tokenizer,
+            return_full_text=True,
+            task='text-generation',
+            eos_token_id=terminators,
+            pad_token_id=tokenizer.eos_token_id,
+            do_sample=True,
+            max_new_tokens=max_new_tokens,
+            repetition_penalty=1.1
+        )
+    elif model_identifier in qwen_models:
+        terminators = [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|im_end|>")
+        ]
+        generate_text = pipeline(
+            model=model, tokenizer=tokenizer,
+            return_full_text=True,
+            task='text-generation',
+            eos_token_id=terminators,
+            pad_token_id=tokenizer.eos_token_id,
+            do_sample=True,
+            max_new_tokens=max_new_tokens,
+            repetition_penalty=1.1
+        )
     else:
         generate_text = pipeline(
             model=model, tokenizer=tokenizer,
@@ -98,19 +133,27 @@ def generate_prompt_template(model_id):
 
     if model_id in llama3_models:
         template = prompts.get('template-llama_instruct', '')
-        prompt = PromptTemplate.from_template(template)
+    elif model_id in mistral_models:
+        template = prompts.get('template-mistral', '')
+    elif model_id in qwen_models:
+        template = prompts.get('template-qwen', '')
     else:
         template = prompts.get('template-generic', '')
-        prompt = PromptTemplate.from_template(template)
+    prompt = PromptTemplate.from_template(template)
 
     return prompt
 
 
-def initialize_chain(model_id, hf_auth, max_new_tokens):
-    generate_text = initialize_pipeline(model_id, hf_auth, max_new_tokens)
-    hf_pipeline = HuggingFacePipeline(pipeline=generate_text)
-    prompt = generate_prompt_template(model_id)
-    chain = prompt | hf_pipeline
+def initialize_chain(model_id, hf_auth, openai_auth, max_new_tokens):
+    if model_id not in openai_models:
+        generate_text = initialize_pipeline(model_id, hf_auth, max_new_tokens)
+        hf_pipeline = HuggingFacePipeline(pipeline=generate_text)
+        prompt = generate_prompt_template(model_id)
+        chain = prompt | hf_pipeline
+    else:
+        chain = OpenAI(
+            api_key=openai_auth,
+        )
 
     return chain
 
@@ -128,20 +171,35 @@ def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
         sys_mess += prompts.get('few_shots', '')
 
     context = retrieve_context(vectdb, question, num_chunks)
-    complete_answer = llm_chain.invoke({"question": question,
-                                        "system_message": sys_mess,
-                                        "context": context})
-    prompt, answer = parse_llm_answer(complete_answer, model_id)
+
+    if model_id not in openai_models:
+        complete_answer = llm_chain.invoke({"question": question,
+                                            "system_message": sys_mess,
+                                            "context": context})
+        prompt, answer = parse_llm_answer(complete_answer, model_id)
+    else:
+        prompt = f'{sys_mess}\nHere is the most similar past traces: {context}\n' + f'Here is the prefix to predict: {question}\nAnswer: '
+        completion = llm_chain.chat.completions.create(
+            model = model_id,
+            messages = [
+                {"role": "system", "content": f'{sys_mess}\nHere is the most similar past traces: {context}\n'},
+                {"role": "user", "content": f'Here is the prefix to predict: {question}\nAnswer: '},
+            ]
+        )
+        answer = completion.choices[0].message.content.strip()
+
     return prompt, answer
 
 
 def parse_llm_answer(compl_answer, llm_choice):
     if llm_choice in llama3_models:
         delimiter = '<|start_header_id|>assistant<|end_header_id|>'
-    elif 'Question:' in compl_answer:
-        delimiter = 'Answer: '
-    else:
+    elif llm_choice in mistral_models:
         delimiter = '[/INST]'
+    elif llm_choice in qwen_models:
+        delimiter = '<|im_start|>assistant'
+    else:
+        delimiter = 'Answer:'
 
     index = compl_answer.find(delimiter)
     prompt = compl_answer[:index + len(delimiter)]
