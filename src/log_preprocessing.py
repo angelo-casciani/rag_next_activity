@@ -81,10 +81,12 @@ def extract_traces_with_attributes(log_content):
             attributes = []
             for attribute_match in attribute_pattern.findall(event_match):
                 key, value = attribute_match
-                if key != "lifecycle:transition" and key != "time:timestamp":
-                    attributes.append(f'{key} {value}')
-                    if key not in keys:
-                        keys.append(key)
+                #if key != "lifecycle:transition" and key != "time:timestamp":
+                if key != "lifecycle:transition":
+                    key_initial = ''.join([part[:2] for part in key.split(':')])
+                    attributes.append(f'{key_initial}:{value}')
+                    if f'{key_initial}: {key}' not in keys:
+                        keys.append(f'{key_initial}: {key}')
             if attributes:
                 trace_content.append(','.join(attributes))
         if len(trace_content) >= 2:
@@ -116,7 +118,8 @@ def generate_csv_from_test_set(test_set, test_path, base=1, gap=3):
         for index in indices:
             if index < len(trace):
                 prefix = '; '.join(trace[:index]) + ';'
-                prediction = trace[index].split('concept:name ')[1].split(',')[0]
+                #prediction = trace[index].split('concept:name ')[1].split(',')[0]
+                prediction = trace[index].split('cona:')[1].split(',')[0]
                 tests.append([prefix, prediction])
 
     with open(test_path, 'w', newline='') as csvfile:
@@ -135,9 +138,10 @@ def compute_log_stats(log_name):
 
 
 def main():
-    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets', f"test_set_Road_Traffic_Fine.csv")
-    content = read_event_log('Road_Traffic_Fine_Management_Process.xes')
+    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets', f"sintetico-2-2var-1rel-1-nonrel.csv")
+    content = read_event_log('sintetico-2-2var-1rel-1-nonrel.xes')
     traces, event_attributes = extract_traces_with_attributes(content)
+    print(event_attributes)
     test_set = generate_test_set(traces, 0.2)
     generate_csv_from_test_set(test_set=test_set, test_path=test_set_path)
 

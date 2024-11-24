@@ -34,3 +34,5 @@ python3 src/main.py --log sintetico-5-online-shopping-alt.xes --modality evaluat
 # python3 src/main.py --log sintetico-5-online-shopping.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
 # Evaluation of Llama 3.1 Instruct on sintetico-5-alt Log with log attributes
 # python3 src/main.py --log sintetico-5-online-shopping-alt.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
+
+python3 src/main.py --log sintetico-2-2var-1rel-1-nonrel.xes --modality evaluation-attributes --rebuild_db_and_tests True --num_documents_in_context 4
