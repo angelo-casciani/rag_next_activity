@@ -37,8 +37,10 @@ def parse_arguments():
                         default=5)
     parser.add_argument('--log', type=str, help='The event log to use for the next activity prediction',
                         default='Hospital_log.xes')
-    parser.add_argument('--log_gap', type=int, help='Maximum number of tokens to generate',
-                        default=5)
+    parser.add_argument('--prefix_base', type=int, help='Maximum number of tokens to generate',
+                        default=1)
+    parser.add_argument('--prefix_gap', type=int, help='Maximum number of tokens to generate',
+                        default=3)
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
                         default=256)
     parser.add_argument('--batch_size', type=int, default=32)
@@ -71,12 +73,16 @@ def main():
         if 'attributes' in args.modality:
             traces, event_attributes = lp.extract_traces_with_attributes(content)
         else:
-            traces = lp.extract_traces_concept_names(content)
+            pass
+            #traces = lp.extract_traces_concept_names(content)
         if 'evaluation' in args.modality:
             test_set = lp.generate_test_set(traces, 0.2)
+            prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=1, gap=3)
+            prefix_prediction_pairs = lp.process_prefixes_prediction_with_last_attribute_values(prefix_prediction, base=args.prefix_base, gap=args.prefix_gap)
+            lp.generate_csv_from_test_set(test_set=prefix_prediction_pairs, test_path=test_set_path)
             traces = [trace for trace in traces if trace not in test_set]
-            lp.generate_csv_from_test_set(test_set=test_set, test_path=test_set_path, gap=args.log_gap)
-        vs.store_traces(traces, q_client, args.log, embed_model, COLLECTION_NAME)
+            traces_to_store = lp.process_traces_with_last_attribute_values(traces)
+        vs.store_traces(traces_to_store, q_client, args.log, embed_model, COLLECTION_NAME)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
@@ -95,7 +101,7 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests
     }
     if event_attributes:
-        run_data['Event Attributes'] = ','.join(event_attributes)
+        run_data['Event Attributes'] = event_attributes
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)
