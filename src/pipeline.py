@@ -167,8 +167,9 @@ def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
     if modality == 'evaluation-attributes':
         #sys_mess += prompts.get('evaluation-attributes_shots', '').replace('REPLACE', info_run['Event Attributes'])
         sys_mess += prompts.get('evaluation-attributes', '').replace('REPLACE', info_run['Event Attributes'])
+        sys_mess += prompts.get('evaluation-attributes_shots', '').replace('REPLACE', info_run['Event Attributes'])
     else:
-        sys_mess += prompts.get('few_shots', '')
+        sys_mess += prompts.get('few_shots-concept', '')
 
     context = retrieve_context(vectdb, question, num_chunks)
 

@@ -77,12 +77,13 @@ def main():
             #traces = lp.extract_traces_concept_names(content)
         if 'evaluation' in args.modality:
             test_set = lp.generate_test_set(traces, 0.2)
+            traces = [trace for trace in traces if trace not in test_set]
+            traces = lp.process_traces_with_last_attribute_values(traces)
+            print(f"Test set size: {len(test_set)} of {len(traces)} total traces")
             prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=1, gap=3)
             prefix_prediction_pairs = lp.process_prefixes_prediction_with_last_attribute_values(prefix_prediction, base=args.prefix_base, gap=args.prefix_gap)
             lp.generate_csv_from_test_set(test_set=prefix_prediction_pairs, test_path=test_set_path)
-            traces = [trace for trace in traces if trace not in test_set]
-            traces_to_store = lp.process_traces_with_last_attribute_values(traces)
-        vs.store_traces(traces_to_store, q_client, args.log, embed_model, COLLECTION_NAME)
+        vs.store_traces(traces, q_client, args.log, embed_model, COLLECTION_NAME)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
