@@ -49,6 +49,8 @@ def generate_prefix_windows(traces_list):
             if prefix_window not in prefix_windows:
                 prefix_windows.append(prefix_window)
     return prefix_windows
+"""
+
 
 def extract_traces_concept_names(log_content):
     trace_pattern = re.compile(r'<trace>.*?</trace>', re.DOTALL)
@@ -65,7 +67,7 @@ def extract_traces_concept_names(log_content):
         if len(trace_content) >= 2:
             traces_list.append('; '.join(trace_content))
     traces_list = list(dict.fromkeys(traces_list))
-    return traces_list"""
+    return traces_list
 
 
 def extract_traces_with_attributes(log_content):
@@ -84,7 +86,7 @@ def extract_traces_with_attributes(log_content):
                 if key != "lifecycle:transition":
                     key_initial = ''.join([part[:2] for part in key.split(':')])
                     attributes.append(f'{key_initial}:{value}')
-                    if key_initial not in keys:
+                    if key_initial not in keys and key_initial != 'cona':
                         keys[key_initial] = key
             if attributes:
                 trace_content.append(','.join(attributes))
@@ -107,7 +109,7 @@ def create_prefixes_with_attribute_last_values(traces, base, gap):
                 prefixes_predictions.append((prefix, prediction))
     return prefixes_predictions
 
-    
+
 def process_traces_with_last_attribute_values(traces):
     processed_traces = []
     for trace in traces:
@@ -123,7 +125,7 @@ def process_traces_with_last_attribute_values(traces):
                 attribute_value = attribute.split(':')[1]
                 if attribute_key != 'cona':
                     attribute_values[attribute_key] = attribute_value
-        trace_attributes = str(concept_name_trace) + ' - Last values for attributes: ' + str(attribute_values)
+        trace_attributes = str(concept_name_trace) + ' - Values: ' + str(attribute_values)
         processed_traces.append(trace_attributes)
     return processed_traces
 
@@ -144,7 +146,7 @@ def process_prefixes_prediction_with_last_attribute_values(prefix_prediction_pai
                 attribute_value = attribute.split(':')[1]
                 if attribute_key != 'cona':
                     attribute_values[attribute_key] = attribute_value
-        proc_prefix_attributes = str(concept_name_trace) + ' - Last values for attributes: ' + str(attribute_values)
+        proc_prefix_attributes = str(concept_name_trace) + ' - Values: ' + str(attribute_values)
         processed_prefixes.append((proc_prefix_attributes, prediction))
     return processed_prefixes
 
@@ -173,7 +175,8 @@ def generate_csv_from_test_set(test_set, test_path):
 
 
 def main():
-    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets', f"sintetico-2-2var-1rel-1-nonrel.csv")
+    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
+                                 f"sintetico-2-2var-1rel-1-nonrel.csv")
     content = read_event_log('sintetico-2-2var-1rel-1-nonrel.xes')
     traces, event_attributes = extract_traces_with_attributes(content)
     print(event_attributes)
@@ -182,6 +185,7 @@ def main():
     prefix_prediction = create_prefixes_with_attribute_last_values(test_set, base=1, gap=3)
     prefix_prediction_pairs = process_prefixes_prediction_with_last_attribute_values(prefix_prediction)
     generate_csv_from_test_set(test_set=prefix_prediction_pairs, test_path=test_set_path)
+
 
 if __name__ == '__main__':
     main()

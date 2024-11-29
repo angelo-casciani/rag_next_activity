@@ -29,7 +29,7 @@ def parse_arguments():
                         help='Embedding model identifier')
     parser.add_argument('--vector_dimension', type=int, default=384,
                         help='Vector space dimension')
-    parser.add_argument('--llm_id', type=str, default='meta-llama/Llama-3.1-8B-Instruct',
+    parser.add_argument('--llm_id', type=str, default='meta-llama/Meta-Llama-3.1-8B-Instruct',
                         help='LLM model identifier')
     parser.add_argument('--model_max_length', type=int, help='Maximum input length (context window)',
                         default=128000)
@@ -42,7 +42,7 @@ def parse_arguments():
     parser.add_argument('--prefix_gap', type=int, help='Maximum number of tokens to generate',
                         default=3)
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
-                        default=256)
+                        default=1024)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
                         help='Rebuild the vector index and the test set', default=False)
@@ -66,22 +66,28 @@ def main():
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
                                  f"test_set_{args.log.split('.xes')[0]}_{args.modality}.csv")
     event_attributes = []
+    total_traces_size = 0
+    test_set_size = 0
+    traces_to_store_size = 0
+    test_size_prefixes = 0
     if args.rebuild_db_and_tests:
         vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
         q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
         content = lp.read_event_log(args.log)
         if 'attributes' in args.modality:
             traces, event_attributes = lp.extract_traces_with_attributes(content)
+            total_traces_size = len(traces)
         else:
-            pass
-            #traces = lp.extract_traces_concept_names(content)
+            traces = lp.extract_traces_concept_names(content)
         if 'evaluation' in args.modality:
             test_set = lp.generate_test_set(traces, 0.2)
+            test_set_size = len(test_set)
             traces = [trace for trace in traces if trace not in test_set]
             traces = lp.process_traces_with_last_attribute_values(traces)
-            print(f"Test set size: {len(test_set)} of {len(traces)} total traces")
-            prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=1, gap=3)
-            prefix_prediction_pairs = lp.process_prefixes_prediction_with_last_attribute_values(prefix_prediction, base=args.prefix_base, gap=args.prefix_gap)
+            traces_to_store_size = len(traces)
+            prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=args.prefix_base, gap=args.prefix_gap)
+            prefix_prediction_pairs = lp.process_prefixes_prediction_with_last_attribute_values(prefix_prediction)
+            test_size_prefixes = len(prefix_prediction_pairs)
             lp.generate_csv_from_test_set(test_set=prefix_prediction_pairs, test_path=test_set_path)
         vs.store_traces(traces, q_client, args.log, embed_model, COLLECTION_NAME)
 
@@ -95,6 +101,10 @@ def main():
         'Vector Space Dimension': space_dimension,
         'Evaluation Modality': args.modality,
         'Event Log': args.log,
+        'Total Traces in Log': total_traces_size,
+        'Test Set Size': test_set_size,
+        'Traces Stored Size': traces_to_store_size,
+        'Test Set Prefixes Size': test_size_prefixes,
         'LLM ID': model_id,
         'Context Window LLM': args.model_max_length,
         'Max Generated Tokens LLM': max_new_tokens,
@@ -102,7 +112,7 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests
     }
     if event_attributes:
-        run_data['Event Attributes'] = event_attributes
+        run_data['Event Attributes'] = str(event_attributes)
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)

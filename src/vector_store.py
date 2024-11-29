@@ -87,6 +87,7 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
 
 
 def retrieve_context(vector_index, query, num_chunks, key=None, search_filter=None):
+    query = query.split('-')[0].strip()
     retrieved = vector_index.similarity_search(query, num_chunks)
     if key is not None and search_filter is not None:
         filter_ = models.Filter(
