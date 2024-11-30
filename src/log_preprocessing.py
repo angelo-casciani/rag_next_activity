@@ -159,6 +159,8 @@ def generate_test_set(traces, test_set_proportion):
 
 
 def generate_csv_from_test_set(test_set, test_path):
+    size = 300
+    test_set = random.sample(test_set, size)
     with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])

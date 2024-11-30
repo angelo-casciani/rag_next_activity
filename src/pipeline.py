@@ -236,8 +236,6 @@ def live_prompting(choice_llm, model1, vect_db, num_chunks, info_run):
 def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_questions, info_run):
     oracle = AnswerVerificationOracle(info_run)
     count = 0
-    size = 300
-    list_questions = random.sample(list_questions, size)
     for el in list_questions:
         prefix = el[0]
         expected_prediction = el[1]

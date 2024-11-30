@@ -116,7 +116,6 @@ def main():
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)
-        run_data['Test Set Size (Number of Evaluation Questions)'] = len(test_list)
         p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_list, run_data)
     else:
         p.live_prompting(model_id, chain, q_store, num_docs, run_data)
