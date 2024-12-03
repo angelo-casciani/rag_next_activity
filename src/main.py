@@ -42,7 +42,7 @@ def parse_arguments():
     parser.add_argument('--prefix_gap', type=int, help='Maximum number of tokens to generate',
                         default=3)
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
-                        default=1024)
+                        default=1280)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
                         help='Rebuild the vector index and the test set', default=False)
@@ -75,7 +75,7 @@ def main():
         q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
         content = lp.read_event_log(args.log)
         if 'attributes' in args.modality:
-            traces, event_attributes = lp.extract_traces_with_attributes(content)
+            traces, event_attributes, activities_set = lp.extract_traces_with_attributes(content)
             total_traces_size = len(traces)
         else:
             traces = lp.extract_traces_concept_names(content)
@@ -113,6 +113,7 @@ def main():
     }
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)
+        run_data['Activities'] = str(activities_set)
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)

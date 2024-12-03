@@ -76,6 +76,7 @@ def extract_traces_with_attributes(log_content):
     attribute_pattern = re.compile(r'key="(.*?)" value="(.*?)"/>')
     traces_list = []
     keys = {}
+    activities = set()
     for trace_match in trace_pattern.findall(log_content):
         trace_content = []
         for event_match in event_pattern.findall(trace_match):
@@ -86,6 +87,8 @@ def extract_traces_with_attributes(log_content):
                 if key != "lifecycle:transition":
                     key_initial = ''.join([part[:2] for part in key.split(':')])
                     attributes.append(f'{key_initial}:{value}')
+                    if key == 'concept:name':
+                        activities.add(value)
                     if key_initial not in keys and key_initial != 'cona':
                         keys[key_initial] = key
             if attributes:
@@ -93,7 +96,7 @@ def extract_traces_with_attributes(log_content):
         if len(trace_content) >= 2:
             traces_list.append('; '.join(trace_content))
     traces_list = list(dict.fromkeys(traces_list))
-    return traces_list, keys
+    return traces_list, keys, activities
 
 
 def create_prefixes_with_attribute_last_values(traces, base, gap):
@@ -173,14 +176,15 @@ def generate_csv_from_test_set(test_set, test_path):
     traces = extract_traces(tree_content)
     print(f'Total number of traces: {len(traces)}')
     total_events = sum(len(trace) for trace in traces)
-    print(f'Total number of events: {total_events}')"""
+    print(f'Total number of events: {total_events}')
 
 
 def main():
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
                                  f"sintetico-2-2var-1rel-1-nonrel.csv")
     content = read_event_log('sintetico-2-2var-1rel-1-nonrel.xes')
-    traces, event_attributes = extract_traces_with_attributes(content)
+    traces, event_attributes, activities = extract_traces_with_attributes(content)
+    print(activities)
     print(event_attributes)
     traces_to_store = process_traces_with_last_attribute_values(traces)
     test_set = generate_test_set(traces, 0.2)
@@ -191,3 +195,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+"""
