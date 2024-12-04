@@ -68,6 +68,7 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
     identifier = 0
     for t in traces:
         metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
+        t = t.split('-')[0].strip()
         point = models.PointStruct(
             id=identifier,
             vector=embed_model.embed_documents([t])[0],
