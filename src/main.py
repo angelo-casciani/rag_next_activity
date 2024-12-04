@@ -66,6 +66,7 @@ def main():
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
                                  f"test_set_{args.log.split('.xes')[0]}_{args.modality}.csv")
     event_attributes = []
+    activities_set = set()
     total_traces_size = 0
     test_set_size = 0
     traces_to_store_size = 0

@@ -29,7 +29,7 @@ class AnswerVerificationOracle:
         if expected_answer is not None:
             expected_answer = '<' + expected_answer + '>'
             result['expected_answer'] = expected_answer
-            result['verification_result'] = expected_answer.lower() in model_answer.lower().replace(" ", "")
+            result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(" ", "")
             print(f"Answer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
 

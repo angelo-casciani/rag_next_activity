@@ -66,17 +66,20 @@ def store_xes_traces(traces, qdrant_client, log_name, embed_model, collection_na
 def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
     points = []
     identifier = 0
+    stored = []
     for t in traces:
         metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
         t = t.split('-')[0].strip()
-        point = models.PointStruct(
-            id=identifier,
-            vector=embed_model.embed_documents([t])[0],
-            payload=metadata
-        )
-        print(f'Processing point for trace {identifier + 1} of {len(traces)}...')
-        points.append(point)
-        identifier += 1
+        if t not in stored:
+            point = models.PointStruct(
+                id=identifier,
+                vector=embed_model.embed_documents([t])[0],
+                payload=metadata
+            )
+            print(f'Processing point for trace {identifier + 1} of {len(traces)}...')
+            points.append(point)
+            stored.append(t)
+            identifier += 1
 
     print('Storing points into the vector store...')
     qdrant_client.upsert(
