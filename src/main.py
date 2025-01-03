@@ -23,6 +23,7 @@ warnings.filterwarnings('ignore')
 
 # 'sentence-transformers/all-MiniLM-L6-v2'
 # 'sentence-transformers/all-mpnet-base-v2'
+# 'sentence-transformers/all-MiniLM-L12-v2'
 def parse_arguments():
     parser = ArgumentParser(description="Run LLM Generation.")
     parser.add_argument('--embed_model_id', type=str, default='sentence-transformers/all-MiniLM-L12-v2',
@@ -72,7 +73,7 @@ def main():
     traces_to_store_size = 0
     test_size_prefixes = 0
     if args.rebuild_db_and_tests:
-        vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
+        # vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
         q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
         content = lp.read_event_log(args.log)
         #if 'attributes' in args.modality:

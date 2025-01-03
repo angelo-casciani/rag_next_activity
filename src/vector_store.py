@@ -1,17 +1,19 @@
 from qdrant_client import QdrantClient, models
 from qdrant_client.http.models import Distance, VectorParams
-from langchain_qdrant import Qdrant
+from langchain_qdrant import QdrantVectorStore
 
 
 def initialize_vector_store(url, grpc_port, collection_name, embed_model, dimension):
     client = QdrantClient(url, grpc_port=grpc_port, prefer_grpc=True)
-    store = Qdrant(client, collection_name=collection_name, embeddings=embed_model)
+    if client.collection_exists(collection_name):
+        client.delete_collection(collection_name)
 
-    if not client.collection_exists(collection_name):
-        client.create_collection(
-            collection_name=collection_name,
-            vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
-        )
+    client.create_collection(
+        collection_name=collection_name,
+        vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
+    )
+
+    store = QdrantVectorStore(client, collection_name=collection_name, embedding=embed_model)
 
     return client, store
 
