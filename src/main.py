@@ -9,7 +9,8 @@ import pipeline as p
 import utility as u
 import vector_store as vs
 
-DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
+#DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
+DEVICE = f'cuda:1' if torch.cuda.is_available() else 'cpu'
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
@@ -62,7 +63,7 @@ def main():
     embed_model = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
     space_dimension = args.vector_dimension
 
-    q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
+    q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension, args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
                                  f"test_set_{args.log.split('.xes')[0]}_{args.modality}.csv")
@@ -74,7 +75,7 @@ def main():
     test_size_prefixes = 0
     if args.rebuild_db_and_tests:
         # vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
-        q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
+        # q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
         content = lp.read_event_log(args.log)
         #if 'attributes' in args.modality:
         traces, event_attributes, activities_set = lp.extract_traces_with_attributes(content)
@@ -84,7 +85,7 @@ def main():
         #if 'evaluation' in args.modality:
         test_set = lp.generate_test_set(traces, 0.2)
         test_set_size = len(test_set)
-        traces = [trace for trace in traces if trace not in test_set]
+        #traces = [trace for trace in traces if trace not in test_set]
         traces = lp.process_traces_with_last_attribute_values(traces)
         traces_to_store_size = len(traces)
         prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=args.prefix_base, gap=args.prefix_gap)
@@ -119,7 +120,7 @@ def main():
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)
-        p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_list, run_data)
+        p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_list, run_data, traces)
     else:
         p.live_prompting(model_id, chain, q_store, num_docs, run_data)
 

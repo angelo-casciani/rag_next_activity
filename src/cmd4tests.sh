@@ -45,3 +45,6 @@
 
 python3 src/main.py --log sintetico-11-insurance_data_norel.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct
 python3 src/main.py --log sintetico-12-reserveroom_data_norel.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct
+python3 src/main.py --log sintetico-13-multivariant.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct
+
+python3 src/main.py --log BPI_Challenge_2013_incidents.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4

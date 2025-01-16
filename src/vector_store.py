@@ -3,15 +3,15 @@ from qdrant_client.http.models import Distance, VectorParams
 from langchain_qdrant import QdrantVectorStore
 
 
-def initialize_vector_store(url, grpc_port, collection_name, embed_model, dimension):
+def initialize_vector_store(url, grpc_port, collection_name, embed_model, dimension, rebuild_db):
     client = QdrantClient(url, grpc_port=grpc_port, prefer_grpc=True)
-    if client.collection_exists(collection_name):
+    if rebuild_db:
         client.delete_collection(collection_name)
 
-    client.create_collection(
-        collection_name=collection_name,
-        vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
-    )
+        client.create_collection(
+            collection_name=collection_name,
+            vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
+        )
 
     store = QdrantVectorStore(client, collection_name=collection_name, embedding=embed_model)
 

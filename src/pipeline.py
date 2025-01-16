@@ -1,7 +1,6 @@
 import datetime
 import json
 import os
-import random
 
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
@@ -19,6 +18,7 @@ mistral_models = ['mistralai/Mistral-7B-Instruct-v0.2', 'mistralai/Mistral-7B-In
                   'mistralai/Mistral-Nemo-Instruct-2407', 'mistralai/Ministral-8B-Instruct-2410']
 qwen_models = ['Qwen/Qwen2.5-7B-Instruct']
 openai_models = ['gpt-4o-mini']
+phi_models = ['microsoft/phi-4']
 
 
 def initialize_embedding_model(embedding_model_id, dev, batch_size):
@@ -59,7 +59,8 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
         config=model_config,
         quantization_config=bnb_config,
         device_map='auto',
-        token=hf_token
+        token=hf_token,
+        attn_implementation="flash_attention_2"
     )
     model.eval()
     # print(f"Model loaded on {device}")
@@ -113,6 +114,21 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
             max_new_tokens=max_new_tokens,
             repetition_penalty=1.1
         )
+    elif model_identifier in phi_models:
+        terminators = [
+            tokenizer.eos_token_id,
+            tokenizer.convert_tokens_to_ids("<|im_sep|>")
+        ]
+        generate_text = pipeline(
+            model=model, tokenizer=tokenizer,
+            return_full_text=True,
+            task='text-generation',
+            eos_token_id=terminators,
+            pad_token_id=tokenizer.eos_token_id,
+            do_sample=True,
+            max_new_tokens=max_new_tokens,
+            repetition_penalty=1.1
+        )
     else:
         generate_text = pipeline(
             model=model, tokenizer=tokenizer,
@@ -137,6 +153,8 @@ def generate_prompt_template(model_id):
         template = prompts.get('template-mistral', '')
     elif model_id in qwen_models:
         template = prompts.get('template-qwen', '')
+    elif model_id in phi_models:
+        template = prompts.get('template-phi', '')
     else:
         template = prompts.get('template-generic', '')
     prompt = PromptTemplate.from_template(template)
@@ -195,6 +213,8 @@ def parse_llm_answer(compl_answer, llm_choice):
         delimiter = '[/INST]'
     elif llm_choice in qwen_models:
         delimiter = '<|im_start|>assistant'
+    elif llm_choice in phi_models:
+        delimiter = '<|im_start|>assistant'
     else:
         delimiter = 'Answer:'
 
@@ -228,7 +248,7 @@ def live_prompting(choice_llm, model1, vect_db, num_chunks, info_run):
         print()
 
 
-def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_questions, info_run):
+def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_questions, info_run, traces):
     oracle = AnswerVerificationOracle(info_run)
     count = 0
     for el in list_questions:
@@ -239,6 +259,8 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_ques
         #print(f'Prompt: {prompt}\n')
         oracle.verify_answer(prompt, prefix, answer)
         count += 1
+        print(prefix)
+        print(prefix in traces)
         print(f'Processing prediction for prefix {count} of {len(list_questions)}...')
 
     print('Validation process completed. Check the output file.')
