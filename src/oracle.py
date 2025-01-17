@@ -30,7 +30,7 @@ class AnswerVerificationOracle:
             expected_answer = '<' + expected_answer + '>'
             result['expected_answer'] = expected_answer
             result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(" ", "")
-            print(f"Answer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
+            print(f"Prompt: {prompt}\nAnswer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
 
         return result['verification_result']

@@ -9,8 +9,8 @@ import pipeline as p
 import utility as u
 import vector_store as vs
 
-#DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
-DEVICE = f'cuda:1' if torch.cuda.is_available() else 'cpu'
+DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
+#DEVICE = f'cuda:1' if torch.cuda.is_available() else 'cpu'
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
@@ -120,7 +120,7 @@ def main():
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)
-        p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_list, run_data, traces)
+        p.evaluate_rag_pipeline(model_id, chain, q_store, num_docs, test_list, run_data)
     else:
         p.live_prompting(model_id, chain, q_store, num_docs, run_data)
 

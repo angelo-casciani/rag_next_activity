@@ -248,7 +248,7 @@ def live_prompting(choice_llm, model1, vect_db, num_chunks, info_run):
         print()
 
 
-def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_questions, info_run, traces):
+def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_questions, info_run):
     oracle = AnswerVerificationOracle(info_run)
     count = 0
     for el in list_questions:
@@ -259,8 +259,6 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_ques
         #print(f'Prompt: {prompt}\n')
         oracle.verify_answer(prompt, prefix, answer)
         count += 1
-        print(prefix)
-        print(prefix in traces)
         print(f'Processing prediction for prefix {count} of {len(list_questions)}...')
 
     print('Validation process completed. Check the output file.')
