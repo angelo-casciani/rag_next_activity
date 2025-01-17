@@ -73,11 +73,11 @@ def process_prefixes(traces):
                     key_initial = ''.join([part[:2] for part in key.split(':')])
                     attr_vals[key_initial] = value
                     keys[key_initial] = key
-        
+
         if cl_list_string not in results:
-            results[cl_list_string] = {last_evt: attr_vals}
-        else:
-            results[cl_list_string][last_evt] = attr_vals
+            results[cl_list_string] = f'Values: {str(attr_vals)} | Next activity: <{last_evt}>'
+        #else:
+        #    results[cl_list_string] = f'Values: {attr_vals} | <{last_evt}>'
         print(f"Processed prefix {i}/{len(traces)}")
     print(f"Total unique prefixes: {len(results)}")
     return results, keys, activities
@@ -92,14 +92,15 @@ def generate_test_set(traces, test_set_proportion):
 
 def generate_csv_from_test_set(test_set, test_path, size=300):
     test_set = build_prefixes(test_set)
-    test_set, attr_keys = process_prefixes(test_set)
+    test_set, attr_keys, act_list = process_prefixes(test_set)
     test_set = dict(random.sample(list(test_set.items()), size))
     with open(test_path, 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['prefix', 'prediction'])
-        for prefix, predictions in test_set.items():
-            for prediction, attributes in predictions.items():
-                csvwriter.writerow([f'{prefix} - Values: {attributes}', prediction])
+        for prefix, prediction in test_set.items():
+            attributes = prediction.split('|')[0].strip()
+            next_activity = '<' + prediction.split('<')[1].strip()
+            csvwriter.writerow([f'{prefix} - Values: {attributes}', next_activity])
 
 
 """Old functions BEGIN
