@@ -72,27 +72,16 @@ def main():
     total_traces_size = 0
     test_set_size = 0
     traces_to_store_size = 0
-    test_size_prefixes = 0
     if args.rebuild_db_and_tests:
-        # vs.delete_qdrant_collection(q_client, COLLECTION_NAME)
-        # q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension)
         content = lp.read_event_log(args.log)
-        #if 'attributes' in args.modality:
-        traces, event_attributes, activities_set = lp.extract_traces_with_attributes(content)
-        total_traces_size = len(traces)
-        #else:
-            #traces = lp.extract_traces_concept_names(content)
-        #if 'evaluation' in args.modality:
-        test_set = lp.generate_test_set(traces, 0.2)
+        traces = lp.extract_traces(content)
+        prefixes = lp.build_prefixes(traces)
+        prefixes, event_attributes, activities_set = lp.process_prefixes(prefixes)
+        traces_to_store_size = len(prefixes)
+        vs.store_traces(prefixes, q_client, args.log, embed_model, COLLECTION_NAME)
+        test_set = lp.generate_test_set(traces, 0.3)
         test_set_size = len(test_set)
-        #traces = [trace for trace in traces if trace not in test_set]
-        traces = lp.process_traces_with_last_attribute_values(traces)
-        traces_to_store_size = len(traces)
-        prefix_prediction = lp.create_prefixes_with_attribute_last_values(test_set, base=args.prefix_base, gap=args.prefix_gap)
-        prefix_prediction_pairs = lp.process_prefixes_prediction_with_last_attribute_values(prefix_prediction)
-        test_size_prefixes = len(prefix_prediction_pairs)
-        lp.generate_csv_from_test_set(test_set=prefix_prediction_pairs, test_path=test_set_path)
-        vs.store_traces(traces, q_client, args.log, embed_model, COLLECTION_NAME)
+        lp.generate_csv_from_test_set(test_set, test_set_path)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
@@ -107,7 +96,6 @@ def main():
         'Total Traces in Log': total_traces_size,
         'Test Set Size': test_set_size,
         'Traces Stored Size': traces_to_store_size,
-        'Test Set Prefixes Size': test_size_prefixes,
         'LLM ID': model_id,
         'Context Window LLM': args.model_max_length,
         'Max Generated Tokens LLM': max_new_tokens,
