@@ -1,13 +1,19 @@
 #!/bin/bash
 
 # Evaluation of Llama 3.1 Instruct on Road Traffic Fine Management Log ONLY concept names
-python3 src/main.py --log Road_Traffic_Fine_Management_Process.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
-python3 src/main.py --log Hospital_billing.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
-python3 src/main.py --log BPI_Challenge_2012.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
-python3 src/main.py --log BPI_Challenge_2013_incidents.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
-python3 src/main.py --log BPIC15_1.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+#python3 src/main.py --log Road_Traffic_Fine_Management_Process.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+#python3 src/main.py --log Hospital_billing.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+#python3 src/main.py --log BPI_Challenge_2012.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+#python3 src/main.py --log BPI_Challenge_2013_incidents.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+#python3 src/main.py --log BPIC15_1.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+
+python3 src/main.py --log marketing_campaign_log.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+python3 src/main.py --log melanoma_treatment.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+python3 src/main.py --log udonya.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+
 python3 src/main.py --log BPI_Challenge_2017.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
 python3 src/main.py --log sintetico-5-online-shopping-alt.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
+python3 src/main.py --log BPI_Challenge_2018.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
 
 # python3 src/main.py --log sepsis.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
 
@@ -58,6 +64,6 @@ python3 src/main.py --log sintetico-5-online-shopping-alt.xes --modality evaluat
 
 python3 src/main.py --log sintetico-11-insurance_data_norel.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
 python3 src/main.py --log sintetico-12-reserveroom_data_norel.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --num_documents_in_context 3 --max_new_tokens 1536
-python3 src/main.py --log sintetico-13-multivariant.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct
+#python3 src/main.py --log sintetico-13-multivariant.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct
 
 # python3 src/main.py --log BPI_Challenge_2013_incidents.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4
