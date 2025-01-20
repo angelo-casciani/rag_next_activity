@@ -29,6 +29,10 @@ class AnswerVerificationOracle:
         if expected_answer is not None:
             # expected_answer = '<' + expected_answer + '>'
             result['expected_answer'] = expected_answer
+            if "Answer: <" in model_answer and '>' not in model_answer:
+                model_answer = model_answer.split("Answer: ")[1] + '>'
+            elif "Answer: " in model_answer and '<' not in model_answer:
+                model_answer = '<' + model_answer.split("Answer: ")[1] + '>'
             result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(" ", "")
             print(f"Prompt: {prompt}\nAnswer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
