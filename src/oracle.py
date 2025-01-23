@@ -56,18 +56,15 @@ class VerificationOracle:
         }
         expected_answer = self.prefix_with_expected_answer_pairs.get(prefix)
         if expected_answer is not None:
-            # expected_answer = '<' + expected_answer + '>'
             result['expected_answer'] = expected_answer
-            if "Answer: <" in model_answer and '>' not in model_answer:
-                model_answer = model_answer.split("Answer: ")[1] + '>'
-            elif "Answer: " in model_answer and '<' not in model_answer:
-                model_answer = '<' + model_answer.split("Answer: ")[1] + '>'
+            if "<" in model_answer and '>' not in model_answer:
+                model_answer = '<' + model_answer.split("<")[1] + '>'
             else:
-                model_answer = '<' + model_answer.split('<')[1].split('>')[0]
+                model_answer = '<' + model_answer.split('<')[1].split('>')[0] + '>'
             result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(
                 " ", "")
-            print(
-                f"Prompt: {prompt}\nAnswer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
+            print(f"Prompt: {prompt}\nAnswer: {model_answer}\n"
+                  f"Expected Answer: {expected_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
         self.true_next_activities.append(expected_answer.strip('<').strip('>'))
         self.predicted_next_activities.append(model_answer.strip('<').strip('>'))
