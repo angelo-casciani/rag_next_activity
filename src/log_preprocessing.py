@@ -41,8 +41,8 @@ def build_prefixes(traces, base=1, gap=3):
 
 
 def process_prefixes(traces):
-    concept_name_pattern = re.compile(r'<string key="concept:name" value="(.*?)"/>', re.DOTALL)
-    lifecycle_transition_pattern = re.compile(r'<string key="lifecycle:transition" value="(.*?)"/>', re.DOTALL)
+    concept_name_pattern = re.compile(r'<string key="concept:name" value="(.*?)"\s*/>', re.DOTALL)
+    lifecycle_transition_pattern = re.compile(r'<string key="lifecycle:transition" value="(.*?)"\s*/>', re.DOTALL)
     attribute_pattern = re.compile(r'key="(.*?)" value="(.*?)"/>')
     seen_prefixes = []
     results = {}

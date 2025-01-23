@@ -2,7 +2,6 @@ import datetime
 import os
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
-
 """
 
 # True next activities and predicted next activities
@@ -24,6 +23,8 @@ print(f"Macro Recall: {recall:.2f}")
 print(f"Macro F1-Score: {f1:.2f}")
 
 """
+
+
 class VerificationOracle:
     def __init__(self, info_run):
         self.true_next_activities = []
@@ -36,7 +37,6 @@ class VerificationOracle:
         self.f1score_macro = 0
         self.results = []
         self.run_info = info_run
-
 
     def add_prefix_with_expected_answer_pair(self, prefix, expected_answer):
         self.prefix_with_expected_answer_pairs[prefix] = expected_answer
@@ -62,8 +62,12 @@ class VerificationOracle:
                 model_answer = model_answer.split("Answer: ")[1] + '>'
             elif "Answer: " in model_answer and '<' not in model_answer:
                 model_answer = '<' + model_answer.split("Answer: ")[1] + '>'
-            result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(" ", "")
-            print(f"Prompt: {prompt}\nAnswer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
+            else:
+                model_answer = '<' + model_answer.split('<')[1].split('>')[0]
+            result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(
+                " ", "")
+            print(
+                f"Prompt: {prompt}\nAnswer: {model_answer}\nExpected Answer: {expected_answer}\nResult: {result['verification_result']}")
         self.results.append(result)
         self.true_next_activities.append(expected_answer.strip('<').strip('>'))
         self.predicted_next_activities.append(model_answer.strip('<').strip('>'))
@@ -76,10 +80,14 @@ class VerificationOracle:
     """
 
     def compute_stats(self):
-        self.precision_macro = precision_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes, average='macro')
-        self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes, average='macro')
-        self.f1score_macro = f1_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes, average='macro')
-        self.accuracy = accuracy_score(self.true_next_activities, self.predicted_next_activities)    # Accuracy = correct predictions / total predictions)
+        self.precision_macro = precision_score(self.true_next_activities, self.predicted_next_activities,
+                                               labels=self.classes, average='macro')
+        self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
+                                         average='macro')
+        self.f1score_macro = f1_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
+                                      average='macro')
+        self.accuracy = accuracy_score(self.true_next_activities,
+                                       self.predicted_next_activities)  # Accuracy = correct / total predictions
 
     """ Writing the verification results to a file.
 
@@ -100,6 +108,7 @@ class VerificationOracle:
             file.write(f"Precision (macro): {self.accuracy:.2f}\n")
             file.write(f"Recall (macro): {self.accuracy:.2f}\n")
             file.write(f"F1-score (macro): {self.accuracy:.2f}\n")
+            file.write(f"{self.classes}\n")
             file.write("-----------------------------------\n\n")
 
             for result in self.results:
