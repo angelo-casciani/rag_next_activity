@@ -6,18 +6,16 @@ The approach leverages an architecture that combines Large Language Models (LLMs
 
 ## Installation
 
-(Optional) Set up a conda environment for the project.
-```bash
-conda create -n rag_next_activity python=3.10 --yes
-conda activate rag_next_activity
-```
-
-To install the required Python packages for this project, you can use *pip* along with the *requirements.txt* file.
-
 First, you need to clone the repository:
 ```bash
 git clone https://github.com/angelo-casciani/rag_next_activity
 cd rag_next_activity
+```
+
+(Optional) Set up a conda environment for the project.
+```bash
+conda create -n rag_next_activity python=3.10 --yes
+conda activate rag_next_activity
 ```
 
 Run the following command to install the necessary dependencies using *pip*:
@@ -27,7 +25,10 @@ pip install -r requirements.txt
 
 This command will read the *requirements.txt* file and install all the specified packages along with their dependencies.
 
-Extract the content of the compressed event logs in the *logs* folder.
+Unzip the *logs.zip* directory:
+```bash
+unzip logs.zip
+```
 
 ## LLMs Requirements
 
@@ -35,7 +36,14 @@ Please note that this software leverages open-source LLMs reported in the table:
 
 | Model | HuggingFace Link |
 |-----------|-----------|
-| Llama 3.1 8B Instruct | [HF link](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct) |
+| meta-llama/Meta-Llama-3.1-8B-Instruct | [HF link](https://huggingface.co/meta-llama/Meta-Llama-3.1-8B-Instruct) |
+| meta-llama/Llama-3.2-1B-Instruct | [HF Link](https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct)|
+| meta-llama/Llama-3.2-3B-Instruct | [HF link](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct) |
+| mistralai/Mistral-7B-Instruct-v0.2 | [HF link](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2) |
+| mistralai/Mistral-7B-Instruct-v0.3 | [HF link](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3) |
+| Qwen/Qwen2.5-7B-Instruct | [HF link](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) |
+| microsoft/phi-4 | [HF link](https://huggingface.co/microsoft/phi-4) |
+| gpt-4o-mini | [OpenAI link](https://platform.openai.com/docs/models) |
 
 Request in advance the permission to use each Llama model for your *HuggingFace* account.
 

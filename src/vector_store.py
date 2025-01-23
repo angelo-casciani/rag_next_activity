@@ -69,9 +69,10 @@ def store_traces(traces, qdrant_client, log_name, embed_model, collection_name):
     points = []
     identifier = 0
     stored = []
-    for t in traces:
-        metadata = {'page_content': t, 'name': f'{log_name} Trace {identifier}'}
-        t = t.split('-')[0].strip()
+
+    for t, prediction in traces.items():
+        content = f'[{t}] - {prediction}'
+        metadata = {'page_content': content, 'name': f'{log_name} Trace {identifier}'}
         if t not in stored:
             point = models.PointStruct(
                 id=identifier,
