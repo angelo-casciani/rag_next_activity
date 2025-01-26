@@ -29,7 +29,7 @@ class VerificationOracle:
     def __init__(self, info_run):
         self.true_next_activities = []
         self.predicted_next_activities = []
-        self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
+        self.classes = []
         self.prefix_with_expected_answer_pairs = {}
         self.accuracy = 0
         self.precision_macro = 0
@@ -59,12 +59,16 @@ class VerificationOracle:
             result['expected_answer'] = expected_answer
             if "<" in model_answer and '>' not in model_answer:
                 model_answer = '<' + model_answer.split("<")[1] + '>'
-            else:
+            elif "<" in model_answer and '>' in model_answer:
                 model_answer = '<' + model_answer.split('<')[1].split('>')[0] + '>'
             result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(
                 " ", "")
             print(f"Prompt: {prompt}\nAnswer: {model_answer}\n"
                   f"Expected Answer: {expected_answer}\nResult: {result['verification_result']}")
+            if result['verification_result']:
+                model_answer = expected_answer
+            # else:
+                # model_answer = '<Wrong class>'
         self.results.append(result)
         self.true_next_activities.append(expected_answer.strip('<').strip('>'))
         self.predicted_next_activities.append(model_answer.strip('<').strip('>'))
@@ -77,6 +81,7 @@ class VerificationOracle:
     """
 
     def compute_stats(self):
+        self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
         self.precision_macro = precision_score(self.true_next_activities, self.predicted_next_activities,
                                                labels=self.classes, average='macro')
         self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
@@ -102,9 +107,9 @@ class VerificationOracle:
                 file.write(f"{key}: {self.run_info[key]}\n")
             file.write('\n-----------------------------------\n')
             file.write(f"Accuracy: {self.accuracy:.2f}\n")
-            file.write(f"Precision (macro): {self.accuracy:.2f}\n")
-            file.write(f"Recall (macro): {self.accuracy:.2f}\n")
-            file.write(f"F1-score (macro): {self.accuracy:.2f}\n")
+            file.write(f"Precision (macro): {self.precision_macro:.2f}\n")
+            file.write(f"Recall (macro): {self.recall_macro:.2f}\n")
+            file.write(f"F1-score (macro): {self.f1score_macro:.2f}\n")
             file.write(f"{self.classes}\n")
             file.write("-----------------------------------\n\n")
 

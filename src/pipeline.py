@@ -214,7 +214,7 @@ def parse_llm_answer(compl_answer, llm_choice):
     elif llm_choice in qwen_models:
         delimiter = '<|im_start|>assistant'
     elif llm_choice in phi_models:
-        delimiter = '<|im_start|>assistant'
+        delimiter = '<|im_start|>assistant<|im_sep|>'
     else:
         delimiter = 'Answer:'
 
