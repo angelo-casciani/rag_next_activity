@@ -36,7 +36,7 @@ def parse_arguments():
     parser.add_argument('--model_max_length', type=int, help='Maximum input length (context window)',
                         default=128000)
     parser.add_argument('--num_documents_in_context', type=int, help='Number of documents in the context',
-                        default=5)
+                        default=3)
     parser.add_argument('--log', type=str, help='The event log to use for the next activity prediction',
                         default='Hospital_log.xes')
     parser.add_argument('--prefix_base', type=int, help='Maximum number of tokens to generate',
