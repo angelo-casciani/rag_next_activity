@@ -19,3 +19,4 @@ matplotlib>=3.9.1
 scikit-learn>=1.5.0
 datasets>=2.19.1
 openai>=1.54.5
+flash-attn>=2.7.3

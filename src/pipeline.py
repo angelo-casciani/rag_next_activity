@@ -19,6 +19,7 @@ mistral_models = ['mistralai/Mistral-7B-Instruct-v0.2', 'mistralai/Mistral-7B-In
 qwen_models = ['Qwen/Qwen2.5-7B-Instruct']
 openai_models = ['gpt-4o-mini']
 phi_models = ['microsoft/phi-4']
+deepseek_models = ['deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B']
 
 
 def initialize_embedding_model(embedding_model_id, dev, batch_size):
@@ -155,6 +156,8 @@ def generate_prompt_template(model_id):
         template = prompts.get('template-qwen', '')
     elif model_id in phi_models:
         template = prompts.get('template-phi', '')
+    elif model_id in deepseek_models:
+        template = prompts.get('template-deepseek', '')
     else:
         template = prompts.get('template-generic', '')
     prompt = PromptTemplate.from_template(template)
@@ -215,6 +218,8 @@ def parse_llm_answer(compl_answer, llm_choice):
         delimiter = '<|im_start|>assistant'
     elif llm_choice in phi_models:
         delimiter = '<|im_start|>assistant<|im_sep|>'
+    elif llm_choice in deepseek_models:
+        delimiter = 'Assistant: '
     else:
         delimiter = 'Answer:'
 

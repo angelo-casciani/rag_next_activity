@@ -1,28 +1,7 @@
 import datetime
 import os
+import time
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
-
-"""
-
-# True next activities and predicted next activities
-true_activities = ['A', 'B', 'A', 'C', 'B']
-predicted_activities = ['A', 'A', 'B', 'C', 'B']
-
-# Unique activities (classes)
-classes = list(set(true_activities + predicted_activities))
-
-precision = precision_score(true_activities, predicted_activities, labels=classes, average='macro')
-recall = recall_score(true_activities, predicted_activities, labels=classes, average='macro')
-f1 = f1_score(true_activities, predicted_activities, labels=classes, average='macro')
-accuracy = accuracy_score(true_activities, predicted_activities) # Accuracy = correct predictions / total predictions)
-
-# Print results
-print(f"Accuracy: {accuracy:.2f}")
-print(f"Macro Precision: {precision:.2f}")
-print(f"Macro Recall: {recall:.2f}")
-print(f"Macro F1-Score: {f1:.2f}")
-
-"""
 
 
 class VerificationOracle:
@@ -37,14 +16,12 @@ class VerificationOracle:
         self.f1score_macro = 0
         self.results = []
         self.run_info = info_run
+        self.start_time = time.time()
+        self.end_time = 0
+        self.elapsed_time = 0
 
     def add_prefix_with_expected_answer_pair(self, prefix, expected_answer):
         self.prefix_with_expected_answer_pairs[prefix] = expected_answer
-
-    """ Verifying the answer correctness.
-
-    This method checks whether the model's answer matches the expected answer for a given prompt.
-    """
 
     def verify_answer(self, prompt, prefix, model_answer):
         result = {
@@ -57,28 +34,21 @@ class VerificationOracle:
         expected_answer = self.prefix_with_expected_answer_pairs.get(prefix)
         if expected_answer is not None:
             result['expected_answer'] = expected_answer
-            if "<" in model_answer and '>' not in model_answer:
-                model_answer = '<' + model_answer.split("<")[1] + '>'
-            elif "<" in model_answer and '>' in model_answer:
-                model_answer = '<' + model_answer.split('<')[1].split('>')[0] + '>'
+            if "\\boxed{" in model_answer and '}' in model_answer:
+                model_answer = '\\boxed{' + model_answer.split('\\boxed{')[1].split('}')[0] + '}'
+            else:
+                model_answer = '\\boxed{Wrong format}'
             result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(
                 " ", "")
             print(f"Prompt: {prompt}\nAnswer: {model_answer}\n"
                   f"Expected Answer: {expected_answer}\nResult: {result['verification_result']}")
             if result['verification_result']:
                 model_answer = expected_answer
-            # else:
-                # model_answer = '<Wrong class>'
         self.results.append(result)
-        self.true_next_activities.append(expected_answer.strip('<').strip('>'))
-        self.predicted_next_activities.append(model_answer.strip('<').strip('>'))
+        self.true_next_activities.append(expected_answer.strip('\\boxed{').strip('}'))
+        self.predicted_next_activities.append(model_answer.strip('\\boxed{').strip('}'))
 
         return result['verification_result']
-
-    """ Computing the metrics for the run.
-    
-       This method computes and stores the metrics for the run.
-    """
 
     def compute_stats(self):
         self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
@@ -89,7 +59,9 @@ class VerificationOracle:
         self.f1score_macro = f1_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
                                       average='macro')
         self.accuracy = accuracy_score(self.true_next_activities,
-                                       self.predicted_next_activities)  # Accuracy = correct / total predictions
+                                       self.predicted_next_activities)
+        self.end_time = time.time()
+        self.elapsed_time = self.end_time - self.start_time
 
     """ Writing the verification results to a file.
 
@@ -106,11 +78,12 @@ class VerificationOracle:
             for key in self.run_info.keys():
                 file.write(f"{key}: {self.run_info[key]}\n")
             file.write('\n-----------------------------------\n')
-            file.write(f"Accuracy: {self.accuracy:.2f}\n")
-            file.write(f"Precision (macro): {self.precision_macro:.2f}\n")
-            file.write(f"Recall (macro): {self.recall_macro:.2f}\n")
-            file.write(f"F1-score (macro): {self.f1score_macro:.2f}\n")
+            file.write(f"Accuracy: {self.accuracy:.4f}\n")
+            file.write(f"Precision (macro): {self.precision_macro:.4f}\n")
+            file.write(f"Recall (macro): {self.recall_macro:.4f}\n")
+            file.write(f"F1-score (macro): {self.f1score_macro:.4f}\n")
             file.write(f"{self.classes}\n")
+            file.write(f"Elapsed time: {self.elapsed_time:.5f} seconds")
             file.write("-----------------------------------\n\n")
 
             for result in self.results:

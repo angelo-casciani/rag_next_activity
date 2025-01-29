@@ -105,7 +105,7 @@ def generate_csv_from_test_set(test_set, test_path, size=300):
         csvwriter.writerow(['prefix', 'prediction'])
         for prefix, prediction in test_set.items():
             attributes = prediction.split('|')[0].strip()
-            next_activity = '<' + prediction.split('| Next activity: ')[1].strip() + '>'
+            next_activity = prediction.split('| Next activity: ')[1].strip()
             csvwriter.writerow([f'{prefix} - Values: {attributes}', next_activity])
 
 
