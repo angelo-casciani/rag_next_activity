@@ -104,7 +104,7 @@ def main():
     }
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)
-        run_data['Activities'] = str(activities_set)
+        run_data['Activities'] = activities_set
 
     if 'evaluation' in args.modality:
         test_list = u.load_csv_questions(test_set_path)

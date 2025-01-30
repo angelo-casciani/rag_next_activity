@@ -1,5 +1,7 @@
 import datetime
+import difflib
 import os
+import re
 import time
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
@@ -8,7 +10,7 @@ class VerificationOracle:
     def __init__(self, info_run):
         self.true_next_activities = []
         self.predicted_next_activities = []
-        self.classes = []
+        self.classes = list(info_run['Activities'])
         self.prefix_with_expected_answer_pairs = {}
         self.accuracy = 0
         self.precision_macro = 0
@@ -33,25 +35,44 @@ class VerificationOracle:
         }
         expected_answer = self.prefix_with_expected_answer_pairs.get(prefix)
         if expected_answer is not None:
-            result['expected_answer'] = expected_answer
-            if "\\boxed{" in model_answer and '}' in model_answer:
-                model_answer = '\\boxed{' + model_answer.split('\\boxed{')[1].split('}')[0] + '}'
+            result["expected_answer"] = expected_answer
+            match = re.search(r'\\boxed\{([^}]*)\}', model_answer)
+            if match:
+                content = match.group(1).strip("'")
+                model_answer = f'\\boxed{{{content}}}'
             else:
                 model_answer = '\\boxed{Wrong format}'
-            result['verification_result'] = expected_answer.lower().replace(" ", "") in model_answer.lower().replace(
-                " ", "")
-            print(f"Prompt: {prompt}\nAnswer: {model_answer}\n"
-                  f"Expected Answer: {expected_answer}\nResult: {result['verification_result']}")
-            if result['verification_result']:
-                model_answer = expected_answer
-        self.results.append(result)
-        self.true_next_activities.append(expected_answer.strip('\\boxed{').strip('}'))
-        self.predicted_next_activities.append(model_answer.strip('\\boxed{').strip('}'))
+            if "None" in model_answer:
+                model_answer = '\\boxed{Wrong format}'
 
-        return result['verification_result']
+            model_answer = re.sub(r'\\text\{(.*?)\}', r'\1', model_answer)  # Remove \text{}
+            model_answer = re.sub(r'[^a-zA-Z0-9\s]', '', model_answer).strip()  # Remove special characters
+            closest_match = difflib.get_close_matches(model_answer, self.classes, n=1, cutoff=0.6)
+            if closest_match:
+                model_answer = closest_match[0]  # Set model_answer to the best matching label
+            else:
+                model_answer = '\\boxed{Wrong format}'
+
+            result["verification_result"] = (
+                    expected_answer.lower().replace(" ", "") in model_answer.lower().replace(" ", "")
+            )
+            print(
+                f"Prompt: {prompt}\n"
+                f"Answer: {model_answer}\n"
+                f"Expected Answer: {expected_answer}\n"
+                f"Result: {result['verification_result']}"
+            )
+            if result["verification_result"]:
+                model_answer = expected_answer
+
+        self.results.append(result)
+        self.true_next_activities.append(expected_answer.removeprefix("\\boxed{").removesuffix("}"))
+        self.predicted_next_activities.append(model_answer.removeprefix("\\boxed{").removesuffix("}"))
+
+        return result["verification_result"]
 
     def compute_stats(self):
-        self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
+        # self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
         self.precision_macro = precision_score(self.true_next_activities, self.predicted_next_activities,
                                                labels=self.classes, average='macro')
         self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
@@ -83,7 +104,7 @@ class VerificationOracle:
             file.write(f"Recall (macro): {self.recall_macro:.4f}\n")
             file.write(f"F1-score (macro): {self.f1score_macro:.4f}\n")
             file.write(f"{self.classes}\n")
-            file.write(f"Elapsed time: {self.elapsed_time:.5f} seconds")
+            file.write(f"Elapsed time: {self.elapsed_time:.2f} seconds\n")
             file.write("-----------------------------------\n\n")
 
             for result in self.results:

@@ -186,7 +186,7 @@ def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
         prompts = json.load(prompt_file)
     sys_mess = prompts.get('system_message', '')
     sys_mess += prompts.get('evaluation-attributes', '').replace('REPLACE', info_run['Event Attributes']).replace(
-        'ACTIVITIES', info_run['Activities'])
+        'ACTIVITIES', str(info_run['Activities']))
 
     context = retrieve_context(vectdb, question, num_chunks)
 
