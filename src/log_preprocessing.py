@@ -56,13 +56,16 @@ def process_prefixes(traces):
             concept_name_match = concept_name_pattern.search(event)
             lifecycle_transition_match = lifecycle_transition_pattern.search(event)
             if concept_name_match and lifecycle_transition_match:
-                event_name = f"{concept_name_match.group(1)}+{lifecycle_transition_match.group(1)}"
-                cl_list.append(event_name)
-                activities.add(event_name)
-            elif concept_name_match:
+                if lifecycle_transition_match.group(1) == "complete":
+                    event_name = concept_name_match.group(1)
+                    cl_list.append(event_name)
+                    activities.add(event_name)
+            elif concept_name_match and not lifecycle_transition_match:
                 event_name = concept_name_match.group(1)
                 cl_list.append(event_name)
                 activities.add(event_name)
+        if not cl_list:
+            continue
         cl_list_string = ','.join(cl_list)
         if cl_list_string in seen_prefixes:
             continue
@@ -80,8 +83,6 @@ def process_prefixes(traces):
 
         if cl_list_string not in results:
             results[cl_list_string] = f'Values: {str(attr_vals)} | Next activity: {last_evt}'
-        #else:
-        #    results[cl_list_string] = f'Values: {attr_vals} | <{last_evt}>'
         print(f"Processed prefix {i}/{len(traces)}")
     print(f"Total unique prefixes: {len(results)}")
     return results, keys, activities

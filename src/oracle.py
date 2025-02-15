@@ -10,7 +10,8 @@ class VerificationOracle:
     def __init__(self, info_run):
         self.true_next_activities = []
         self.predicted_next_activities = []
-        self.classes = list(info_run['Activities'])
+        self.total_classes = list(info_run['Activities'])
+        self.considered_classes = []
         self.prefix_with_expected_answer_pairs = {}
         self.accuracy = 0
         self.precision_macro = 0
@@ -47,7 +48,7 @@ class VerificationOracle:
 
             model_answer = re.sub(r'\\text\{(.*?)\}', r'\1', model_answer)  # Remove \text{}
             model_answer = re.sub(r'[^a-zA-Z0-9\s]', '', model_answer).strip()  # Remove special characters
-            closest_match = difflib.get_close_matches(model_answer, self.classes, n=1, cutoff=0.6)
+            closest_match = difflib.get_close_matches(model_answer, self.total_classes, n=1, cutoff=0.6)
             if closest_match:
                 model_answer = closest_match[0]  # Set model_answer to the best matching label
             else:
@@ -72,12 +73,12 @@ class VerificationOracle:
         return result["verification_result"]
 
     def compute_stats(self):
-        # self.classes = list(set(self.true_next_activities + self.predicted_next_activities))
+        self.considered_classes = list(set(self.true_next_activities + self.predicted_next_activities))
         self.precision_macro = precision_score(self.true_next_activities, self.predicted_next_activities,
-                                               labels=self.classes, average='macro')
-        self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
+                                               labels=self.considered_classes, average='macro')
+        self.recall_macro = recall_score(self.true_next_activities, self.predicted_next_activities, labels=self.considered_classes,
                                          average='macro')
-        self.f1score_macro = f1_score(self.true_next_activities, self.predicted_next_activities, labels=self.classes,
+        self.f1score_macro = f1_score(self.true_next_activities, self.predicted_next_activities, labels=self.considered_classes,
                                       average='macro')
         self.accuracy = accuracy_score(self.true_next_activities,
                                        self.predicted_next_activities)
@@ -103,8 +104,11 @@ class VerificationOracle:
             file.write(f"Precision (macro): {self.precision_macro:.4f}\n")
             file.write(f"Recall (macro): {self.recall_macro:.4f}\n")
             file.write(f"F1-score (macro): {self.f1score_macro:.4f}\n")
-            file.write(f"{self.classes}\n")
-            file.write(f"Elapsed time: {self.elapsed_time:.2f} seconds\n")
+            file.write(f"{self.total_classes}\n")
+            file.write(f"Elapsed time: {(self.elapsed_time / 3600):.2f} hours\n")
+            # file.write(f"Predicted next: {self.predicted_next_activities}\n")
+            # file.write(f"True next: {self.true_next_activities}\n")
+            # file.write(f"Considered classes: {self.considered_classes}\n")
             file.write("-----------------------------------\n\n")
 
             for result in self.results:
