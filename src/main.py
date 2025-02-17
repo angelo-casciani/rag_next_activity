@@ -51,6 +51,8 @@ def parse_arguments():
     parser.add_argument('--modality', type=str, default='evaluation-concept_names',
                         help='Modality to use between: evaluation-concept_names, evaluation-attributes, '
                              'live-concept_names, live-attributes')
+    parser.add_argument('--rag', type=u.str2bool,
+                        help='Support for Retrieval-Augmented Generation', default=True)
     args = parser.parse_args()
 
     return args
@@ -62,6 +64,7 @@ def main():
     embed_model_id = args.embed_model_id
     embed_model = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
     space_dimension = args.vector_dimension
+    rag = args.rag
 
     q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension, args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context
@@ -100,7 +103,8 @@ def main():
         'Context Window LLM': args.model_max_length,
         'Max Generated Tokens LLM': max_new_tokens,
         'Number of Documents in the Context': num_docs,
-        'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests
+        'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
+        'RAG': rag
     }
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)

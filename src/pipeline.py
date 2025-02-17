@@ -12,6 +12,7 @@ from oracle import VerificationOracle
 from utility import log_to_file
 from vector_store import retrieve_context
 
+
 llama3_models = ['meta-llama/Meta-Llama-3-8B-Instruct', 'meta-llama/Meta-Llama-3.1-8B-Instruct',
                  'meta-llama/Llama-3.2-1B-Instruct', 'meta-llama/Llama-3.2-3B-Instruct']
 mistral_models = ['mistralai/Mistral-7B-Instruct-v0.2', 'mistralai/Mistral-7B-Instruct-v0.3',
@@ -180,31 +181,50 @@ def initialize_chain(model_id, hf_auth, openai_auth, max_new_tokens):
 
 
 def produce_answer(question, model_id, llm_chain, vectdb, num_chunks, info_run):
-    # modality = info_run['Evaluation Modality']
-    path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+    rag = info_run['RAG']
+    if rag:
+        path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+    else:
+        path_prompts = os.path.join(os.path.dirname(__file__), 'prompts_no_rag.json')
     with open(path_prompts, 'r') as prompt_file:
         prompts = json.load(prompt_file)
     sys_mess = prompts.get('system_message', '')
     sys_mess += prompts.get('evaluation-attributes', '').replace('REPLACE', info_run['Event Attributes']).replace(
         'ACTIVITIES', str(info_run['Activities']))
 
-    context = retrieve_context(vectdb, question, num_chunks)
+    if rag:
+        context = retrieve_context(vectdb, question, num_chunks)
 
-    if model_id not in openai_models:
-        complete_answer = llm_chain.invoke({"question": question,
-                                            "system_message": sys_mess,
-                                            "context": context})
-        prompt, answer = parse_llm_answer(complete_answer, model_id)
+        if model_id not in openai_models:
+            complete_answer = llm_chain.invoke({"question": question,
+                                                "system_message": sys_mess,
+                                                "context": context})
+            prompt, answer = parse_llm_answer(complete_answer, model_id)
+        else:
+            prompt = f'{sys_mess}\nHere is the most similar past traces: {context}\n' + f'Here is the prefix to predict: {question}\nAnswer: '
+            completion = llm_chain.chat.completions.create(
+                model=model_id,
+                messages=[
+                    {"role": "system", "content": f'{sys_mess}\nHere is the most similar past traces: {context}\n'},
+                    {"role": "user", "content": f'Here is the prefix to predict: {question}\nAnswer: '},
+                ]
+            )
+            answer = completion.choices[0].message.content.strip()
     else:
-        prompt = f'{sys_mess}\nHere is the most similar past traces: {context}\n' + f'Here is the prefix to predict: {question}\nAnswer: '
-        completion = llm_chain.chat.completions.create(
-            model=model_id,
-            messages=[
-                {"role": "system", "content": f'{sys_mess}\nHere is the most similar past traces: {context}\n'},
-                {"role": "user", "content": f'Here is the prefix to predict: {question}\nAnswer: '},
-            ]
-        )
-        answer = completion.choices[0].message.content.strip()
+        if model_id not in openai_models:
+            complete_answer = llm_chain.invoke({"question": question,
+                                                "system_message": sys_mess})
+            prompt, answer = parse_llm_answer(complete_answer, model_id)
+        else:
+            prompt = f'{sys_mess}\n' + f'Here is the prefix to predict: {question}\nAnswer: '
+            completion = llm_chain.chat.completions.create(
+                model=model_id,
+                messages=[
+                    {"role": "system", "content": f'{sys_mess}\n'},
+                    {"role": "user", "content": f'Here is the prefix to predict: {question}\nAnswer: '},
+                ]
+            )
+            answer = completion.choices[0].message.content.strip()
 
     return prompt, answer
 
@@ -261,7 +281,7 @@ def evaluate_rag_pipeline(choice_llm, lang_chain, vect_db, num_chunks, list_ques
         expected_prediction = el[1]
         oracle.add_prefix_with_expected_answer_pair(prefix, expected_prediction)
         prompt, answer = produce_answer(prefix, choice_llm, lang_chain, vect_db, num_chunks, info_run)
-        #print(f'Prompt: {prompt}\n')
+        # print(f'Prompt: {prompt}\n')
         oracle.verify_answer(prompt, prefix, answer)
         count += 1
         print(f'Processing prediction for prefix {count} of {len(list_questions)}...')
