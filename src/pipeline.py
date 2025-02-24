@@ -144,8 +144,11 @@ def initialize_pipeline(model_identifier, hf_token, max_new_tokens):
     return generate_text
 
 
-def generate_prompt_template(model_id):
-    path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+def generate_prompt_template(model_id, rag):
+    if rag:
+        path_prompts = os.path.join(os.path.dirname(__file__), 'prompts.json')
+    else:
+        path_prompts = os.path.join(os.path.dirname(__file__), 'prompts_no_rag.json')
     with open(path_prompts, 'r') as prompt_file:
         prompts = json.load(prompt_file)
 
@@ -166,11 +169,11 @@ def generate_prompt_template(model_id):
     return prompt
 
 
-def initialize_chain(model_id, hf_auth, openai_auth, max_new_tokens):
+def initialize_chain(model_id, hf_auth, openai_auth, max_new_tokens, rag):
     if model_id not in openai_models:
         generate_text = initialize_pipeline(model_id, hf_auth, max_new_tokens)
         hf_pipeline = HuggingFacePipeline(pipeline=generate_text)
-        prompt = generate_prompt_template(model_id)
+        prompt = generate_prompt_template(model_id, rag)
         chain = prompt | hf_pipeline
     else:
         chain = OpenAI(

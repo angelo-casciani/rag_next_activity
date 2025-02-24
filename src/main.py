@@ -88,7 +88,7 @@ def main():
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
-    chain = p.initialize_chain(model_id, HF_AUTH, OPENAI_API_KEY, max_new_tokens)
+    chain = p.initialize_chain(model_id, HF_AUTH, OPENAI_API_KEY, max_new_tokens, rag)
     
     run_data = {
         'Batch Size': args.batch_size,
