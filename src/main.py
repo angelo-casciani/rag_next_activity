@@ -10,7 +10,6 @@ import utility as u
 import vector_store as vs
 
 DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
-#DEVICE = f'cuda:1' if torch.cuda.is_available() else 'cpu'
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 load_dotenv()
 HF_AUTH = os.getenv('HF_TOKEN')
@@ -22,16 +21,13 @@ SEED = 10
 warnings.filterwarnings('ignore')
 
 
-# 'sentence-transformers/all-MiniLM-L6-v2'
-# 'sentence-transformers/all-mpnet-base-v2'
-# 'sentence-transformers/all-MiniLM-L12-v2'
 def parse_arguments():
     parser = ArgumentParser(description="Run LLM Generation.")
     parser.add_argument('--embed_model_id', type=str, default='sentence-transformers/all-MiniLM-L12-v2',
                         help='Embedding model identifier')
     parser.add_argument('--vector_dimension', type=int, default=384,
                         help='Vector space dimension')
-    parser.add_argument('--llm_id', type=str, default='meta-llama/Meta-Llama-3.1-8B-Instruct',
+    parser.add_argument('--llm_id', type=str, default='Qwen/Qwen2.5-7B-Instruct',
                         help='LLM model identifier')
     parser.add_argument('--model_max_length', type=int, help='Maximum input length (context window)',
                         default=128000)
@@ -39,18 +35,17 @@ def parse_arguments():
                         default=3)
     parser.add_argument('--log', type=str, help='The event log to use for the next activity prediction',
                         default='Hospital_log.xes')
-    parser.add_argument('--prefix_base', type=int, help='Maximum number of tokens to generate',
+    parser.add_argument('--prefix_base', type=int, help='Base number of events in a prefix trace',
                         default=1)
-    parser.add_argument('--prefix_gap', type=int, help='Maximum number of tokens to generate',
+    parser.add_argument('--prefix_gap', type=int, help='Gap number of events in a prefix trace',
                         default=3)
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
                         default=1280)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
-                        help='Rebuild the vector index and the test set', default=False)
+                        help='Rebuild the vector index and the test set', default=True)
     parser.add_argument('--modality', type=str, default='evaluation-concept_names',
-                        help='Modality to use between: evaluation-concept_names, evaluation-attributes, '
-                             'live-concept_names, live-attributes')
+                        help='Modality to use between: evaluation-concept_names, live-concept_names')
     parser.add_argument('--rag', type=u.str2bool,
                         help='Support for Retrieval-Augmented Generation', default=True)
     args = parser.parse_args()
