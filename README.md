@@ -10,7 +10,7 @@ Despite these advantages, we also report the limitations of the framework, mainl
 
 ## Architecture
 
-![architecture](images/architecture_nap.pdf)
+![architecture](images/architecture_nap.png)
 
 The Figure shows the components of the framework and how they interact.
 
