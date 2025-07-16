@@ -155,6 +155,7 @@ cython_debug/
 # Project Folders
 tests/outputs
 tests/validation
+logs/
 
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
