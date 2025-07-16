@@ -23,6 +23,9 @@ The framework can be decomposed into two main parts:
 ```
 .
 ├── src               # source code of proposed framework
+|   ├── main.py       # main script for live prompting mode
+|   ├── eval.py       # evaluation script for batch testing
+|   ├── pipeline.py   # RAG pipeline implementation
 |   └── ...
 ├── tests             # sources for evaluation
 |   ├── outputs       # outputs of the live convesations
@@ -65,6 +68,22 @@ Unzip the *logs.zip* directory:
 unzip logs.zip
 ```
 
+This project uses [Docker](https://www.docker.com/) to run the vector store [Qdrant](https://qdrant.tech/).
+
+Ensure Docker is installed and running on your system.
+
+First, download the latest Qdrant image from Dockerhub:
+```bash
+docker pull qdrant/qdrant
+```
+
+Then, run the service:
+```bash
+docker run -p 6333:6333 -p 6334:6334 \
+    -v "$(pwd)/qdrant_storage:/qdrant/storage:z" \
+    qdrant/qdrant
+```
+
 ## LLMs Requirements
 
 Please note that this software leverages open-source LLMs reported in the table:
@@ -90,7 +109,11 @@ It is recommended to have access to a GPU-enabled environment meeting at least t
 
 ## Usage
 
-Run the framework for next activity prediction:
+The framework provides two modes of operation:
+
+### Live Prompting Mode
+
+Run the framework for interactive next activity prediction:
 ```bash
 cd src
 python3 main.py
@@ -98,22 +121,33 @@ python3 main.py
 
 The interactions will be stored in a `.txt` file in the [outputs](tests/outputs) folder.
 
+### Evaluation Mode
+
+Run the framework for batch evaluation using test sets:
+```bash
+cd src
+python3 eval.py
+```
+
+This will evaluate the model's performance on predefined test sets and generate validation results.
+
+### Configuration Parameters
+
 The default parameters are:
 - Embedding model: `'sentence-transformers/all-MiniLM-L12-v2'`;
 - Vector space dimension: `384`;
-- LLM: `'Qwen/Qwen2.5-7B-Instruct'`;
+- LLM: `'gpt-4.1'`;
 - Maximum input length (provided context window): `128000`;
 - Number of documents in the context: `3`;
-- Event Log: `'Hospital_log.xes'`;
+- Event Log: `'sepsis.xes'`;
 - Base number of events: `1`;
 - Gap number of events: `3`;
 - Number of generated tokens: `1280`;
 - Batch size for the vectors: `32`;
 - Rebuild the vector index and the test set: `True`;
-- Interaction Modality: `'evaluation-concept_names'`;
 - Support for Retrieval-Augmented Generation: `True`.
 
-To customize these settings, modify the corresponding arguments when executing `main.py`:
+To customize these settings, modify the corresponding arguments when executing `main.py` or `eval.py`:
 - Use `--embed_model_id` to specify a different embedding model (from HuggingFace).
 - Adjust `--vector_dimension` to change the dimension of the vectors to store in the vector store.
 - Use `--llm_id` to specify a different LLM (e.g., among the ones reported in the _LLMs Requirements_ section).
@@ -124,8 +158,9 @@ To customize these settings, modify the corresponding arguments when executing `
 - Adjust `--max_new_tokens` to change the number of generated tokens.
 - Adjust `--batch_size` to change the batch size of the vectors.
 - Adjust `--rebuild_db_and_tests` to rebuild the vector index and test set (i.e., `True` or `False`, necessary to change event log under analysis).
-- Set `--modality` to alter the interaction modality (i.e., `'live-concept_names'` or `'evaluation-concept_names'`).
 - Set `--rag` to support or avoid retrieval-augmented generation (i.e., `True` or `False`).
+
+For evaluation mode, use `--evaluation_modality` to specify the evaluation type (e.g., `'evaluation-concept_names'` or `'evaluation-attributes'`).
 
 A comprehensive list of commands can be found in `src/cmd4tests.sh`.
 

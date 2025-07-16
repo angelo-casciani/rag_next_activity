@@ -1,13 +1,21 @@
+#!/usr/bin/env python3
+"""
+Evaluation script for the RAG Next Activity Prediction pipeline.
+This script handles the evaluation of the pipeline using test sets.
+"""
+
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 import os
 import torch
 import warnings
+from typing import Dict, List
 
 import log_preprocessing as lp
 import pipeline as p
 import utility as u
 import vector_store as vs
+from oracle import VerificationOracle
 
 DEVICE = f'cuda:{torch.cuda.current_device()}' if torch.cuda.is_available() else 'cpu'
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
@@ -21,8 +29,37 @@ SEED = 10
 warnings.filterwarnings('ignore')
 
 
+def evaluate_pipeline(pipeline_instance: p.RAGPipeline, vect_db, num_chunks: int, 
+                     list_questions: List, info_run: Dict):
+    """
+    Evaluate the RAG pipeline using a test set.
+    
+    Args:
+        pipeline_instance: The RAG pipeline instance
+        vect_db: Vector database instance
+        num_chunks: Number of chunks to retrieve from vector store
+        list_questions: List of test questions with expected answers
+        info_run: Runtime information dictionary
+    """
+    oracle = VerificationOracle(info_run)
+    count = 0
+    
+    for el in list_questions:
+        prefix = el[0]
+        expected_prediction = el[1]
+        oracle.add_prefix_with_expected_answer_pair(prefix, expected_prediction)
+        prompt, answer = pipeline_instance.produce_answer(prefix, vect_db, num_chunks, info_run)
+        oracle.verify_answer(prompt, prefix, answer)
+        count += 1
+        print(f'Processing prediction for prefix {count} of {len(list_questions)}...')
+
+    print('Validation process completed. Check the output file.')
+    oracle.write_results_to_file()
+
+
 def parse_arguments():
-    parser = ArgumentParser(description="Run LLM Generation in Live Mode.")
+    """Parse command line arguments for evaluation."""
+    parser = ArgumentParser(description="Evaluate RAG Pipeline for Next Activity Prediction.")
     parser.add_argument('--embed_model_id', type=str, default='sentence-transformers/all-MiniLM-L12-v2',
                         help='Embedding model identifier')
     parser.add_argument('--vector_dimension', type=int, default=384,
@@ -44,14 +81,16 @@ def parse_arguments():
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
                         help='Rebuild the vector index and the test set', default=True)
+    parser.add_argument('--evaluation_modality', type=str, default='evaluation-concept_names',
+                        help='Evaluation modality to use (e.g., evaluation-concept_names, evaluation-attributes)')
     parser.add_argument('--rag', type=u.str2bool,
                         help='Support for Retrieval-Augmented Generation', default=True)
     args = parser.parse_args()
-
     return args
 
 
 def main():
+    """Main evaluation function."""
     args = parse_arguments()
 
     embed_model_id = args.embed_model_id
@@ -59,14 +98,24 @@ def main():
     space_dimension = args.vector_dimension
     rag = args.rag
 
-    q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension, args.rebuild_db_and_tests)
+    # Initialize vector store
+    q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, 
+                                                   embed_model, space_dimension, 
+                                                   args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context
     
+    # Setup test set path
+    test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
+                                 f"test_set_{args.log.split('.xes')[0]}_{args.evaluation_modality}.csv")
+    
+    # Initialize variables
     event_attributes = []
     activities_set = set()
     total_traces_size = 0
+    test_set_size = 0
     traces_to_store_size = 0
     
+    # Process log and build test set if needed
     if args.rebuild_db_and_tests:
         content = lp.read_event_log(args.log)
         traces = lp.extract_traces(content)
@@ -74,6 +123,9 @@ def main():
         prefixes, event_attributes, activities_set = lp.process_prefixes(prefixes)
         traces_to_store_size = len(prefixes)
         vs.store_traces(prefixes, q_client, args.log, embed_model, COLLECTION_NAME)
+        test_set = lp.generate_test_set(traces, 0.3)
+        test_set_size = len(test_set)
+        lp.generate_csv_from_test_set(test_set, test_set_path)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
@@ -83,14 +135,17 @@ def main():
     os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY if OPENAI_API_KEY else ""
     
     # Initialize the RAG pipeline
-    pipeline = p.RAGPipeline(model_id, max_new_tokens, rag)
+    pipeline_instance = p.RAGPipeline(model_id, max_new_tokens, rag)
     
+    # Prepare run data
     run_data = {
         'Batch Size': args.batch_size,
         'Embedding Model ID': embed_model_id,
         'Vector Space Dimension': space_dimension,
+        'Evaluation Modality': args.evaluation_modality,
         'Event Log': args.log,
         'Total Traces in Log': total_traces_size,
+        'Test Set Size': test_set_size,
         'Traces Stored Size': traces_to_store_size,
         'LLM ID': model_id,
         'Context Window LLM': args.model_max_length,
@@ -99,13 +154,15 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
         'RAG': rag
     }
+    
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)
         run_data['Activities'] = activities_set
 
-    # Start live prompting mode
-    print("Starting live prompting mode...")
-    pipeline.live_prompting(q_store, num_docs, run_data)
+    # Load test set and run evaluation
+    test_list = u.load_csv_questions(test_set_path)
+    print(f"Starting evaluation with {len(test_list)} test cases...")
+    evaluate_pipeline(pipeline_instance, q_store, num_docs, test_list, run_data)
 
 
 if __name__ == "__main__":
