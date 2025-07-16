@@ -21,6 +21,30 @@ SEED = 10
 warnings.filterwarnings('ignore')
 
 
+def generate_live_response(pipeline, question: str, curr_datetime: str, vectordb, num_chunks: int, info_run: dict):
+    complete_prompt, answer = pipeline.produce_answer(question, vectordb, num_chunks, info_run)
+    print(f'Prompt: {complete_prompt}\n')
+    print(f'Answer: {answer}\n')
+    print('--------------------------------------------------')
+
+    u.log_to_file(f'Query: {complete_prompt}\n\nAnswer: {answer}\n\n##########################\n\n',
+                  curr_datetime, info_run)
+
+
+def live_prompting(pipeline, vect_db, num_chunks: int, info_run: dict):
+    import datetime
+    current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    while True:
+        query = input('Insert the query (type "quit" to exit): ')
+
+        if query.lower() == 'quit':
+            print("Exiting the chat.")
+            break
+
+        generate_live_response(pipeline, query, current_datetime, vect_db, num_chunks, info_run)
+        print()
+
+
 def parse_arguments():
     parser = ArgumentParser(description="Run LLM Generation in Live Mode.")
     parser.add_argument('--embed_model_id', type=str, default='sentence-transformers/all-MiniLM-L12-v2',
@@ -53,15 +77,12 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-
     embed_model_id = args.embed_model_id
     embed_model = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
     space_dimension = args.vector_dimension
     rag = args.rag
-
     q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension, args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context
-    
     event_attributes = []
     activities_set = set()
     total_traces_size = 0
@@ -77,12 +98,8 @@ def main():
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
-    
-    # Set environment variables for authentication
     os.environ['HF_TOKEN'] = HF_AUTH if HF_AUTH else ""
     os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY if OPENAI_API_KEY else ""
-    
-    # Initialize the RAG pipeline
     pipeline = p.RAGPipeline(model_id, max_new_tokens, rag)
     
     run_data = {
@@ -103,9 +120,8 @@ def main():
         run_data['Event Attributes'] = str(event_attributes)
         run_data['Activities'] = activities_set
 
-    # Start live prompting mode
     print("Starting live prompting mode...")
-    pipeline.live_prompting(q_store, num_docs, run_data)
+    live_prompting(pipeline, q_store, num_docs, run_data)
 
 
 if __name__ == "__main__":

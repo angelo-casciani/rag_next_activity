@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Evaluation script for the RAG Next Activity Prediction pipeline.
-This script handles the evaluation of the pipeline using test sets.
-"""
-
 from argparse import ArgumentParser
 from dotenv import load_dotenv
 import os
@@ -31,16 +25,6 @@ warnings.filterwarnings('ignore')
 
 def evaluate_pipeline(pipeline_instance: p.RAGPipeline, vect_db, num_chunks: int, 
                      list_questions: List, info_run: Dict):
-    """
-    Evaluate the RAG pipeline using a test set.
-    
-    Args:
-        pipeline_instance: The RAG pipeline instance
-        vect_db: Vector database instance
-        num_chunks: Number of chunks to retrieve from vector store
-        list_questions: List of test questions with expected answers
-        info_run: Runtime information dictionary
-    """
     oracle = VerificationOracle(info_run)
     count = 0
     
@@ -90,32 +74,22 @@ def parse_arguments():
 
 
 def main():
-    """Main evaluation function."""
     args = parse_arguments()
-
     embed_model_id = args.embed_model_id
     embed_model = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
     space_dimension = args.vector_dimension
     rag = args.rag
-
-    # Initialize vector store
     q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, 
                                                    embed_model, space_dimension, 
                                                    args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context
-    
-    # Setup test set path
     test_set_path = os.path.join(os.path.dirname(__file__), '..', 'tests', 'test_sets',
                                  f"test_set_{args.log.split('.xes')[0]}_{args.evaluation_modality}.csv")
-    
-    # Initialize variables
     event_attributes = []
     activities_set = set()
     total_traces_size = 0
     test_set_size = 0
     traces_to_store_size = 0
-    
-    # Process log and build test set if needed
     if args.rebuild_db_and_tests:
         content = lp.read_event_log(args.log)
         traces = lp.extract_traces(content)
@@ -129,15 +103,9 @@ def main():
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens
-    
-    # Set environment variables for authentication
     os.environ['HF_TOKEN'] = HF_AUTH if HF_AUTH else ""
     os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY if OPENAI_API_KEY else ""
-    
-    # Initialize the RAG pipeline
     pipeline_instance = p.RAGPipeline(model_id, max_new_tokens, rag)
-    
-    # Prepare run data
     run_data = {
         'Batch Size': args.batch_size,
         'Embedding Model ID': embed_model_id,
@@ -154,12 +122,10 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
         'RAG': rag
     }
-    
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)
         run_data['Activities'] = activities_set
 
-    # Load test set and run evaluation
     test_list = u.load_csv_questions(test_set_path)
     print(f"Starting evaluation with {len(test_list)} test cases...")
     evaluate_pipeline(pipeline_instance, q_store, num_docs, test_list, run_data)

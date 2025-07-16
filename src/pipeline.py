@@ -1,7 +1,6 @@
-import datetime
 import json
 import os
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple
 
 from langchain.chat_models import init_chat_model
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
@@ -213,32 +212,8 @@ class RAGPipeline:
 
         return prompt, answer
 
-    def generate_live_response(self, question: str, curr_datetime: str, vectordb, num_chunks: int, info_run: Dict):
-        complete_prompt, answer = self.produce_answer(question, vectordb, num_chunks, info_run)
-        print(f'Prompt: {complete_prompt}\n')
-        print(f'Answer: {answer}\n')
-        print('--------------------------------------------------')
-
-        log_to_file(f'Query: {complete_prompt}\n\nAnswer: {answer}\n\n##########################\n\n',
-                    curr_datetime, info_run)
-
-    def live_prompting(self, vect_db, num_chunks: int, info_run: Dict):
-        current_datetime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        while True:
-            query = input('Insert the query (type "quit" to exit): ')
-
-            if query.lower() == 'quit':
-                print("Exiting the chat.")
-                break
-
-            self.generate_live_response(query, current_datetime, vect_db, num_chunks, info_run)
-            print()
-
-
-
 
 def initialize_embedding_model(embedding_model_id: str, dev: str, batch_size: int) -> HuggingFaceEmbeddings:
-    """Initialize the embedding model for RAG."""
     embedding_model = HuggingFaceEmbeddings(
         model_name=embedding_model_id,
         model_kwargs={'device': dev},
