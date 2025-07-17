@@ -6,14 +6,37 @@ from langchain_qdrant import QdrantVectorStore
 def initialize_vector_store(url, grpc_port, collection_name, embed_model, dimension, rebuild_db):
     client = QdrantClient(url, grpc_port=grpc_port, prefer_grpc=True)
     if rebuild_db:
-        client.delete_collection(collection_name)
+        try:
+            client.delete_collection(collection_name)
+            print(f"Deleted existing collection: {collection_name}")
+        except Exception as e:
+            print(f"Collection {collection_name} doesn't exist or couldn't be deleted: {e}")
 
         client.create_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
         )
+        print(f"Created new collection: {collection_name} with dimension: {dimension}")
 
-    store = QdrantVectorStore(client, collection_name=collection_name, embedding=embed_model)
+    try:
+        store = QdrantVectorStore(client, collection_name=collection_name, embedding=embed_model)
+    except Exception as e:
+        if "dimensions" in str(e).lower() and "force_recreate" in str(e):
+            print(f"Dimension mismatch detected. Recreating collection with correct dimension: {dimension}")
+            try:
+                client.delete_collection(collection_name)
+                print(f"Deleted existing collection: {collection_name}")
+            except Exception as delete_e:
+                print(f"Warning: Could not delete collection: {delete_e}")
+            
+            client.create_collection(
+                collection_name=collection_name,
+                vectors_config=VectorParams(size=dimension, distance=Distance.COSINE),
+            )
+            print(f"Created new collection: {collection_name} with dimension: {dimension}")
+            store = QdrantVectorStore(client, collection_name=collection_name, embedding=embed_model)
+        else:
+            raise e
 
     return client, store
 

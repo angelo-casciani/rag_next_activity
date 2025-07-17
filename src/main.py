@@ -78,8 +78,12 @@ def parse_arguments():
 def main():
     args = parse_arguments()
     embed_model_id = args.embed_model_id
-    embed_model = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
-    space_dimension = args.vector_dimension
+    embed_model, actual_dimension = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
+    
+    # Use the actual dimension from the model, not the command line argument
+    space_dimension = actual_dimension
+    print(f"Using embedding dimension: {space_dimension}")
+    
     rag = args.rag
     q_client, q_store = vs.initialize_vector_store(URL, GRPC_PORT, COLLECTION_NAME, embed_model, space_dimension, args.rebuild_db_and_tests)
     num_docs = args.num_documents_in_context

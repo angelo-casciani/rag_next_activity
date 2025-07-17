@@ -1,15 +1,119 @@
 import json
 import os
-from typing import Dict, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from langchain.chat_models import init_chat_model
 from langchain_huggingface import HuggingFacePipeline, HuggingFaceEmbeddings
 from langchain_core.prompts import PromptTemplate
+from langchain_core.embeddings import Embeddings
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig, AutoConfig
 from torch import bfloat16
+from sentence_transformers import SentenceTransformer
 
 from utility import log_to_file
 from vector_store import retrieve_context
+
+
+# Supported embedding models
+EMBEDDING_MODELS = {
+    'jina': [
+        'jinaai/jina-embeddings-v4',
+        'jinaai/jina-embeddings-v2-base-en'
+    ],
+    'sentence_transformers': [
+        'sentence-transformers/all-MiniLM-L6-v2',
+        'sentence-transformers/all-mpnet-base-v2'
+    ]
+}
+
+
+def create_jina_v4_embeddings(model_name: str, device: str = 'cpu', default_task: str = 'retrieval'):
+    class JinaV4Wrapper(HuggingFaceEmbeddings):
+        def __init__(self):
+            super().__init__(  # Initialize dummy model to satisfy parent
+                model_name="sentence-transformers/all-MiniLM-L6-v2",
+                model_kwargs={'device': device}
+            )
+            object.__setattr__(self, '_jina_model', SentenceTransformer(model_name, trust_remote_code=True, device=device))
+            object.__setattr__(self, '_default_task', default_task)
+            
+        def embed_query(self, text: str) -> List[float]:   # Embed single query
+            embedding = self._jina_model.encode(
+                sentences=[text],
+                task=self._default_task,
+                prompt_name="query"
+            )
+            return embedding[0].tolist()
+        
+        def embed_documents(self, texts: List[str]) -> List[List[float]]: # Embed multiple document texts
+            embeddings = self._jina_model.encode(
+                sentences=texts,
+                task=self._default_task,
+                prompt_name="passage"
+            )
+            return embeddings.tolist()
+    
+    return JinaV4Wrapper()
+
+
+def initialize_embedding_model(model_id: str, device: str = 'cpu', batch_size: int = 1) -> Tuple[object, int]:
+    try:
+        print(f"Initializing embedding model: {model_id}")
+        if model_id == "jinaai/jina-embeddings-v4":
+            print("Using custom JinaV4Embeddings wrapper")
+            embedding_model = create_jina_v4_embeddings(model_id, device=device)
+            
+            # Test the model to get dimensions
+            test_embedding = embedding_model.embed_query("test")
+            actual_dimension = len(test_embedding)
+            
+            print(f"Jina v4 embedding dimensions: {actual_dimension}")
+            return embedding_model, actual_dimension
+        
+        # Create fallback models list from the constant
+        fallback_models = []
+        for model_family in EMBEDDING_MODELS.values():
+            fallback_models.extend(model_family)
+        
+        # Try the specified model first
+        models_to_try = [model_id] + [m for m in fallback_models if m != model_id]
+        
+        for model_name in models_to_try:
+            try:
+                print(f"Trying embedding model: {model_name}")
+                
+                # Special handling for jina-embeddings-v4
+                if model_name == "jinaai/jina-embeddings-v4":
+                    print("Using custom JinaV4Embeddings wrapper for fallback")
+                    embedding_model = create_jina_v4_embeddings(model_name, device=device)
+                    test_embedding = embedding_model.embed_query("test")
+                    actual_dimension = len(test_embedding)
+                    print(f"Jina v4 embedding dimensions: {actual_dimension}")
+                    return embedding_model, actual_dimension
+                
+                # Standard model loading
+                embedding_model = HuggingFaceEmbeddings(
+                    model_name=model_name,
+                    model_kwargs={'device': device}
+                )
+                
+                # Test the model to get dimensions
+                test_embedding = embedding_model.embed_query("test")
+                actual_dimension = len(test_embedding)
+                
+                print(f"Successfully loaded {model_name} with {actual_dimension} dimensions")
+                return embedding_model, actual_dimension
+                
+            except Exception as e:
+                print(f"Failed to load {model_name}: {str(e)}")
+                continue
+        
+        # If all models fail, raise an error
+        raise ValueError(f"Unable to load any embedding model. Last tried: {models_to_try}")
+        
+    except Exception as e:
+        print(f"Error initializing embedding model: {str(e)}")
+        raise
 
 
 class RAGPipeline:
@@ -211,15 +315,4 @@ class RAGPipeline:
             answer = ""
 
         return prompt, answer
-
-
-def initialize_embedding_model(embedding_model_id: str, dev: str, batch_size: int) -> HuggingFaceEmbeddings:
-    embedding_model = HuggingFaceEmbeddings(
-        model_name=embedding_model_id,
-        model_kwargs={'device': dev},
-        encode_kwargs={'device': dev, 'batch_size': batch_size}
-    )
-    return embedding_model
-
-
 
