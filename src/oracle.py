@@ -23,6 +23,7 @@ class VerificationOracle:
         self.start_time = time.time()
         self.end_time = 0
         self.elapsed_time = 0
+        self.avg_time_per_prediction = 0
         
         self.prefix_lengths = []
         self.earlyness_buckets = defaultdict(lambda: {
@@ -150,6 +151,7 @@ class VerificationOracle:
                                        self.predicted_next_activities)
         self.end_time = time.time()
         self.elapsed_time = self.end_time - self.start_time
+        self.avg_time_per_prediction = self.elapsed_time / len(self.true_next_activities) if len(self.true_next_activities) > 0 else 0
         self._compute_earlyness_metrics()
     
 
@@ -204,6 +206,7 @@ class VerificationOracle:
             file.write(f"F1-score (macro): {self.f1score_macro:.4f}\n")
             file.write(f"Total classes: {self.total_classes}\n")
             file.write(f"Elapsed time: {(self.elapsed_time / 3600):.2f} hours\n")
+            file.write(f"Average time per prediction: {self.avg_time_per_prediction:.4f} seconds\n")
             file.write('\n-----------------------------------\n')
             file.write('EARLYNESS ANALYSIS\n')
             file.write('Metrics by Prefix Length Buckets:\n\n')
@@ -247,7 +250,8 @@ class VerificationOracle:
                 'precision_macro': self.precision_macro,
                 'recall_macro': self.recall_macro,
                 'f1score_macro': self.f1score_macro,
-                'total_samples': len(self.true_next_activities)
+                'total_samples': len(self.true_next_activities),
+                'avg_time_per_prediction': getattr(self, 'avg_time_per_prediction', 0)
             },
             'earlyness_metrics': self.earlyness_metrics,
             'prefix_length_stats': {
