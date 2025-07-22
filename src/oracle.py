@@ -40,9 +40,7 @@ class VerificationOracle:
 
 
     def _calculate_prefix_length(self, prefix):
-        # Extract the activity sequence part (before " - Values:")
         activity_part = prefix.split(' - Values:')[0]
-        # Count the number of activities (comma-separated)
         activities = activity_part.split(',')
         return len(activities)
     

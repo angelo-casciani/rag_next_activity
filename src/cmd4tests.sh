@@ -51,6 +51,14 @@ python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality ev
 python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --embed_model_id jinaai/jina-embeddings-v2-base-en
 python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --max_new_tokens 32768 --embed_model_id jinaai/jina-embeddings-v2-base-en
 
+python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --embed_model_id jinaai/jina-embeddings-v3
+python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --embed_model_id jinaai/jina-embeddings-v3
+python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --max_new_tokens 32768 --embed_model_id jinaai/jina-embeddings-v3
+
+python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --embed_model_id jinaai/jina-embeddings-v3
+python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --embed_model_id jinaai/jina-embeddings-v3
+python3 src/eval.py --log synthetic-13-multivariant.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --max_new_tokens 32768 --embed_model_id jinaai/jina-embeddings-v3
+
 python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --embed_model_id jinaai/jina-embeddings-v4
 python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --embed_model_id jinaai/jina-embeddings-v4
 python3 src/eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Qwen-7B --max_new_tokens 32768 --embed_model_id jinaai/jina-embeddings-v4

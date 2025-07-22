@@ -216,6 +216,7 @@ class RAGPipeline:
 EMBEDDING_MODELS = {
     'jina': [
         'jinaai/jina-embeddings-v4',
+        'jinaai/jina-embeddings-v3',
         'jinaai/jina-embeddings-v2-base-en'
     ],
     'sentence_transformers': [
