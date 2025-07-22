@@ -24,8 +24,8 @@ warnings.filterwarnings('ignore')
 
 
 def evaluate_pipeline(pipeline_instance: p.RAGPipeline, vect_db, num_chunks: int, 
-                     list_questions: List, info_run: Dict):
-    oracle = VerificationOracle(info_run)
+                     list_questions: List, info_run: Dict, earlyness_boundaries=None):
+    oracle = VerificationOracle(info_run, earlyness_boundaries)
     count = 0
     
     for el in list_questions:
@@ -39,6 +39,43 @@ def evaluate_pipeline(pipeline_instance: p.RAGPipeline, vect_db, num_chunks: int
 
     print('Validation process completed. Check the output file.')
     oracle.write_results_to_file()
+    
+    # Display earlyness analysis summary
+    print('\n' + '='*60)
+    print('EARLYNESS ANALYSIS SUMMARY')
+    print('='*60)
+    
+    summary = oracle.get_earlyness_summary()
+    
+    print(f"Overall Performance:")
+    overall = summary['overall_metrics']
+    print(f"  Total Samples: {overall['total_samples']}")
+    print(f"  Accuracy: {overall['accuracy']:.4f}")
+    print(f"  Precision (macro): {overall['precision_macro']:.4f}")
+    print(f"  Recall (macro): {overall['recall_macro']:.4f}")
+    print(f"  F1-score (macro): {overall['f1score_macro']:.4f}")
+    
+    print(f"\nPrefix Length Statistics:")
+    stats = summary['prefix_length_stats']
+    print(f"  Min Length: {stats['min']}")
+    print(f"  Max Length: {stats['max']}")
+    print(f"  Average Length: {stats['average']:.2f}")
+    
+    print(f"\nPerformance by Earlyness Buckets:")
+    bucket_order = oracle._get_bucket_order()
+    
+    for bucket in bucket_order:
+        if bucket in summary['earlyness_metrics']:
+            metrics = summary['earlyness_metrics'][bucket]
+            print(f"\n  {bucket}:")
+            print(f"    Samples: {metrics['count']}")
+            print(f"    Accuracy: {metrics['accuracy']:.4f}")
+            print(f"    Precision: {metrics['precision_macro']:.4f}")
+            print(f"    Recall: {metrics['recall_macro']:.4f}")
+            print(f"    F1-score: {metrics['f1score_macro']:.4f}")
+    
+    print('='*60)
+    return oracle
 
 
 def parse_arguments():
@@ -69,6 +106,9 @@ def parse_arguments():
                         help='Evaluation modality to use (e.g., evaluation-concept_names, evaluation-attributes)')
     parser.add_argument('--rag', type=u.str2bool,
                         help='Support for Retrieval-Augmented Generation', default=True)
+    parser.add_argument('--earlyness_buckets', type=str, 
+                        default='5,10,20,30',
+                        help='Comma-separated boundaries for earlyness buckets (e.g., "5,10,20,30" creates buckets: 1-5, 6-10, 11-20, 21-30, 31+)')
     args = parser.parse_args()
     return args
 
@@ -77,8 +117,6 @@ def main():
     args = parse_arguments()
     embed_model_id = args.embed_model_id
     embed_model, actual_dimension = p.initialize_embedding_model(embed_model_id, DEVICE, args.batch_size)
-    
-    # Use the actual dimension from the model, not the command line argument
     space_dimension = actual_dimension
     print(f"Using embedding dimension: {space_dimension}")
     
@@ -126,13 +164,17 @@ def main():
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
         'RAG': rag
     }
+    earlyness_boundaries = [int(x.strip()) for x in args.earlyness_buckets.split(',')]
+    run_data['Earlyness Boundaries'] = earlyness_boundaries
+    
     if event_attributes:
         run_data['Event Attributes'] = str(event_attributes)
         run_data['Activities'] = activities_set
 
     test_list = u.load_csv_questions(test_set_path)
     print(f"Starting evaluation with {len(test_list)} test cases...")
-    evaluate_pipeline(pipeline_instance, q_store, num_docs, test_list, run_data)
+    print(f"Using earlyness boundaries: {earlyness_boundaries}")
+    evaluate_pipeline(pipeline_instance, q_store, num_docs, test_list, run_data, earlyness_boundaries)
 
 
 if __name__ == "__main__":

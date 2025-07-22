@@ -26,6 +26,7 @@ The framework can be decomposed into two main parts:
 |   ├── main.py       # main script for live prompting mode
 |   ├── eval.py       # evaluation script for batch testing
 |   ├── pipeline.py   # RAG pipeline implementation
+|   ├── oracle.py     # verification oracle
 |   └── ...
 ├── tests             # sources for evaluation
 |   ├── outputs       # outputs of the live convesations
@@ -131,6 +132,54 @@ python3 eval.py
 
 This will evaluate the model's performance on predefined test sets and generate validation results.
 
+### Earlyness Analysis
+
+The evaluation system includes **earlyness analysis** to evaluate the model's early prediction capability across different prefix lengths. This feature provides insights into temporal aspects of next activity prediction.
+
+#### Key Features
+- **Tracks prefix lengths** for each prediction automatically
+- **Groups results by configurable prefix length buckets** (earlyness buckets)
+- **Calculates metrics separately for each bucket** (accuracy, precision, recall, F1-score)
+- **Provides insights into early vs. late prediction performance**
+
+#### How It Works
+The system automatically calculates the number of activities in each prefix and categorizes them into buckets:
+
+**Default buckets (boundaries: 5,10,20,30):**
+- Very Early (1-5): Short prefixes, early in the process
+- Bucket 2 (6-10): Early-medium prefixes  
+- Bucket 3 (11-20): Medium prefixes
+- Bucket 4 (21-30): Late prefixes
+- Very Late (31+): Very long prefixes
+
+#### Example Output
+```
+============================================================
+EARLYNESS ANALYSIS SUMMARY
+============================================================
+Overall Performance:
+  Total Samples: 300
+  Accuracy: 0.7533
+  Precision (macro): 0.7421
+  Recall (macro): 0.7398
+  F1-score (macro): 0.7384
+
+Performance by Earlyness Buckets:
+
+  Very Early (1-5):
+    Samples: 30 (10.0%)
+    Accuracy: 0.8427
+    Precision: 0.8234
+    F1-score: 0.8195
+
+  Bucket 2 (6-10):
+    Samples: 50 (16.7%)
+    Accuracy: 0.7589
+    Precision: 0.7445
+    F1-score: 0.7421
+============================================================
+```
+
 ### Configuration Parameters
 
 The default parameters are:
@@ -145,7 +194,8 @@ The default parameters are:
 - Number of generated tokens: `1280`;
 - Batch size for the vectors: `32`;
 - Rebuild the vector index and the test set: `True`;
-- Support for Retrieval-Augmented Generation: `True`.
+- Support for Retrieval-Augmented Generation: `True`;
+- Earlyness bucket boundaries: `'5,10,20,30'` (creates buckets: 1-5, 6-10, 11-20, 21-30, 31+).
 
 To customize these settings, modify the corresponding arguments when executing `main.py` or `eval.py`:
 - Use `--embed_model_id` to specify a different embedding model (from HuggingFace).
@@ -159,8 +209,26 @@ To customize these settings, modify the corresponding arguments when executing `
 - Adjust `--batch_size` to change the batch size of the vectors.
 - Adjust `--rebuild_db_and_tests` to rebuild the vector index and test set (i.e., `True` or `False`, necessary to change event log under analysis).
 - Set `--rag` to support or avoid retrieval-augmented generation (i.e., `True` or `False`).
+- Use `--earlyness_buckets` to customize earlyness analysis buckets (e.g., `"3,7,15,25"` creates buckets: 1-3, 4-7, 8-15, 16-25, 26+).
+- Adjust `--max_new_tokens` to change the number of generated tokens.
+- Adjust `--batch_size` to change the batch size of the vectors.
+- Adjust `--rebuild_db_and_tests` to rebuild the vector index and test set (i.e., `True` or `False`, necessary to change event log under analysis).
+- Set `--rag` to support or avoid retrieval-augmented generation (i.e., `True` or `False`).
 
 For evaluation mode, use `--evaluation_modality` to specify the evaluation type (e.g., `'evaluation-concept_names'` or `'evaluation-attributes'`).
+
+#### Earlyness Analysis Examples
+
+```bash
+# Use default earlyness buckets for standard analysis
+python3 eval.py --log sepsis.xes
+
+# Use custom buckets for more granular early prediction analysis
+python3 eval.py --log sepsis.xes --earlyness_buckets "3,7,15,25"
+
+# Focus on very early prediction capability
+python3 eval.py --log hospital_billing.xes --earlyness_buckets "2,4,6,8"
+```
 
 A comprehensive list of commands can be found in `src/cmd4tests.sh`.
 
@@ -171,7 +239,7 @@ A comprehensive list of commands can be found in `src/cmd4tests.sh`.
 To reprodure the experiments for the evaluation _without RAG_, for example:
 ```bash
 cd src
-python3 src/main.py --log bpic20_international_declarations.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --max_new_tokens 2048 --rag False
+python3 eval.py --log bpic20_international_declarations.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id Qwen/Qwen2.5-7B-Instruct --max_new_tokens 2048 --rag False
 ```
 
 The results will be stored in a `.txt` file reporting all the information for the run and the corresponding results in the [validation](tests/validation) folder.
@@ -181,7 +249,13 @@ The results will be stored in a `.txt` file reporting all the information for th
 To reprodure the experiments for the evaluation on the _real-world_ event logs, for example:
 ```bash
 cd src
-python3 src/main.py --log sepsis.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --max_new_tokens 2048
+python3 eval.py --log sepsis.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --max_new_tokens 2048
+```
+
+To analyze early prediction capability with custom earlyness buckets:
+```bash
+cd src
+python3 eval.py --log sepsis.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id microsoft/phi-4 --max_new_tokens 2048 --earlyness_buckets "2,5,10,15"
 ```
 
 The results will be stored in a `.txt` file reporting all the information for the run and the corresponding results in the [validation](tests/validation) folder.
@@ -191,10 +265,27 @@ The results will be stored in a `.txt` file reporting all the information for th
 To reprodure the experiments for the evaluation on the _synthetic_ event logs, for example:
 ```bash
 cd src
-python3 src/main.py --log udonya.xes --modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Llama-8B --max_new_tokens 32768
+python3 eval.py --log udonya.xes --evaluation_modality evaluation-attributes --rebuild_db_and_tests True --llm_id deepseek-ai/DeepSeek-R1-Distill-Llama-8B --max_new_tokens 32768
 ```
 
 The results will be stored in a `.txt` file reporting all the information for the run and the corresponding results in the [validation](tests/validation) folder.
+
+## Output and Results
+
+### Validation Results
+All evaluation results are automatically saved to timestamped files in the `tests/validation/` directory. Each result file includes:
+
+- **Run Configuration**: All parameters used for the evaluation
+- **Overall Metrics**: Global accuracy, precision, recall, and F1-score
+- **Earlyness Analysis**: Detailed breakdown of performance across prefix length buckets
+- **Individual Predictions**: Complete record of each prediction with prefix length and bucket assignment
+
+### Earlyness Analysis Benefits
+The integrated earlyness analysis provides valuable insights for:
+- **Process Optimization**: Identify optimal intervention points in business processes
+- **Model Selection**: Compare models based on early prediction capabilities
+- **Threshold Setting**: Determine minimum prefix lengths for reliable predictions
+- **Research Insights**: Understand temporal dynamics in process prediction tasks
 
 ## License
 Distributed under the GNU GPL License. See [LICENSE](LICENSE) for more information.
