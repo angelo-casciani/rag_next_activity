@@ -96,9 +96,9 @@ def parse_arguments():
     parser.add_argument('--prefix_base', type=int, help='Base number of events in a prefix trace',
                         default=1)
     parser.add_argument('--prefix_gap', type=int, help='Gap number of events in a prefix trace',
-                        default=3)
+                        default=1)
     parser.add_argument('--max_new_tokens', type=int, help='Maximum number of tokens to generate',
-                        default=1280)
+                        default=2048)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--rebuild_db_and_tests', type=u.str2bool,
                         help='Rebuild the vector index and the test set', default=True)
