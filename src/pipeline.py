@@ -273,7 +273,7 @@ def initialize_embedding_model(model_id: str, device: str = 'cpu', batch_size: i
         
         for model_name in models_to_try:
             try:
-                print(f"Trying embedding model: {model_name}")
+                print(f"Initializing embedding model: {model_name}")
                 if model_name == "jinaai/jina-embeddings-v4":
                     print("Using custom JinaV4Embeddings wrapper for fallback")
                     embedding_model = create_jina_v4_embeddings(model_name, device=device)

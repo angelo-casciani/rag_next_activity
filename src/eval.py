@@ -39,8 +39,6 @@ def evaluate_pipeline(pipeline_instance: p.RAGPipeline, vect_db, num_chunks: int
 
     print('Validation process completed. Check the output file.')
     oracle.write_results_to_file()
-    
-    # Display earlyness analysis summary
     print('\n' + '='*60)
     print('EARLYNESS ANALYSIS SUMMARY')
     print('='*60)
