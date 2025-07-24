@@ -159,6 +159,8 @@ def main():
         'Context Window LLM': args.model_max_length,
         'Max Generated Tokens LLM': max_new_tokens,
         'Number of Documents in the Context': num_docs,
+        'Prefix Base': args.prefix_base,
+        'Prefix Gap': args.prefix_gap,
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
         'RAG': rag
     }

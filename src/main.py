@@ -105,11 +105,11 @@ def main():
     os.environ['HF_TOKEN'] = HF_AUTH if HF_AUTH else ""
     os.environ['OPENAI_API_KEY'] = OPENAI_API_KEY if OPENAI_API_KEY else ""
     pipeline = p.RAGPipeline(model_id, max_new_tokens, rag)
-    
     run_data = {
         'Batch Size': args.batch_size,
         'Embedding Model ID': embed_model_id,
         'Vector Space Dimension': space_dimension,
+        'Evaluation Modality': args.evaluation_modality,
         'Event Log': args.log,
         'Total Traces in Log': total_traces_size,
         'Traces Stored Size': traces_to_store_size,
@@ -117,6 +117,8 @@ def main():
         'Context Window LLM': args.model_max_length,
         'Max Generated Tokens LLM': max_new_tokens,
         'Number of Documents in the Context': num_docs,
+        'Prefix Base': args.prefix_base,
+        'Prefix Gap': args.prefix_gap,
         'Rebuilt Vector Index and Test Set': args.rebuild_db_and_tests,
         'RAG': rag
     }
