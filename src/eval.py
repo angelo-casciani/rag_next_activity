@@ -134,12 +134,12 @@ def main():
         content = lp.read_event_log(args.log)
         traces = lp.extract_traces(content)
         prefixes = lp.build_prefixes(traces)
-        prefixes, event_attributes, activities_set = lp.process_prefixes(prefixes)
+        prefixes, event_attributes, activities_set = lp.process_prefixes(prefixes, args.log)
         traces_to_store_size = len(prefixes)
         vs.store_traces(prefixes, q_client, args.log, embed_model, COLLECTION_NAME)
         test_set = lp.generate_test_set(traces, 0.3)
         test_set_size = len(test_set)
-        lp.generate_csv_from_test_set(test_set, test_set_path)
+        lp.generate_csv_from_test_set(test_set, test_set_path, log_name=args.log)
 
     model_id = args.llm_id
     max_new_tokens = args.max_new_tokens

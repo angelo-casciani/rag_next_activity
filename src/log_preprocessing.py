@@ -1,6 +1,5 @@
 import csv
 import os
-import pm4py
 import random
 import re
 
@@ -40,7 +39,7 @@ def build_prefixes(traces, base=1, gap=3):
     return prefixes
 
 
-def process_prefixes(traces):
+def process_prefixes(traces, log_name=None):
     concept_name_pattern = re.compile(r'<string key="concept:name" value="(.*?)"\s*/>', re.DOTALL)
     lifecycle_transition_pattern = re.compile(r'<string key="lifecycle:transition" value="(.*?)"\s*/>', re.DOTALL)
     attribute_pattern = re.compile(r'key="(.*?)" value="(.*?)"\s*/>')
@@ -48,6 +47,8 @@ def process_prefixes(traces):
     results = {}
     keys = {}
     activities = set()
+    is_bpic_special = log_name and any(bpic_log in log_name.lower() for bpic_log in ['bpic_2013'])
+    
     for i in range(0, len(traces)):
         trace = traces[i]
         events = re.findall(r"<event>.*?</event>", trace, re.DOTALL)
@@ -55,15 +56,36 @@ def process_prefixes(traces):
         for event in events:
             concept_name_match = concept_name_pattern.search(event)
             lifecycle_transition_match = lifecycle_transition_pattern.search(event)
-            if concept_name_match and lifecycle_transition_match:
-                if lifecycle_transition_match.group(1) == "complete":
+            
+            if concept_name_match:
+                if is_bpic_special:  # For BPIC logs, include more attributes for uniqueness
                     event_name = concept_name_match.group(1)
-                    cl_list.append(event_name)
-                    activities.add(event_name)
-            elif concept_name_match and not lifecycle_transition_match:
-                event_name = concept_name_match.group(1)
-                cl_list.append(event_name)
-                activities.add(event_name)
+                    resource_pattern = re.compile(r'<string key="org:resource" value="(.*?)"\s*/>')
+                    role_pattern = re.compile(r'<string key="org:role" value="(.*?)"\s*/>')
+        
+                    resource_match = resource_pattern.search(event)
+                    role_match = role_pattern.search(event)
+                    
+                    event_identifier = event_name
+                    if lifecycle_transition_match:
+                        event_identifier += f"+{lifecycle_transition_match.group(1)}"
+                    if resource_match:
+                        event_identifier += f"+{resource_match.group(1)}"
+                    if role_match:
+                        event_identifier += f"+{role_match.group(1)}"
+                    
+                    cl_list.append(event_identifier)
+                    activities.add(event_identifier)
+                else:
+                    if lifecycle_transition_match:
+                        if lifecycle_transition_match.group(1).lower() == "complete":
+                            event_name = concept_name_match.group(1)
+                            cl_list.append(event_name)
+                            activities.add(event_name)
+                    elif not lifecycle_transition_match:
+                        event_name = concept_name_match.group(1)
+                        cl_list.append(event_name)
+                        activities.add(event_name)
         if not cl_list:
             continue
         cl_list_string = ','.join(cl_list)
@@ -95,9 +117,9 @@ def generate_test_set(traces, test_set_proportion):
     return test_set
 
 
-def generate_csv_from_test_set(test_set, test_path, size=300):
+def generate_csv_from_test_set(test_set, test_path, size=300, log_name=None):
     test_set = build_prefixes(test_set)
-    test_set, attr_keys, act_list = process_prefixes(test_set)
+    test_set, attr_keys, act_list = process_prefixes(test_set, log_name)
     if size > len(test_set):
         size = len(test_set)
     test_set = dict(random.sample(list(test_set.items()), size))
