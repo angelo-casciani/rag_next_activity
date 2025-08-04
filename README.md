@@ -57,12 +57,12 @@ pip install -r requirements.txt
 ```
 
 Set up a [HuggingFace token](https://huggingface.co/) and/or an [OpenAI API key](https://platform.openai.com/overview) in the `.env` file in the root directory, along with the URL and the GRPC port where the qDrant client is listening on the host:
-    ```env
-    HF_TOKEN=<your token, should start with hf_>
-    OPENAI_API_KEY=<your key, should start with sk->
-    QDRANT_URL=<qDrant client url>
-    QDRANT_GRPC_PORT=<qDrant client grpc port>
-    ```
+```env
+HF_TOKEN=<your token, should start with hf_>
+OPENAI_API_KEY=<your key, should start with sk->
+QDRANT_URL=<qDrant client url>
+QDRANT_GRPC_PORT=<qDrant client grpc port>
+```
 
 Unzip the *logs.zip* directory:
 ```bash
