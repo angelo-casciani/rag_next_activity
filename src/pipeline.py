@@ -28,7 +28,8 @@ class RAGPipeline:
             'qwen': ['Qwen/Qwen2.5-7B-Instruct'],
             'google_genai': ['google/gemma-2-9b-it'],
             'microsoft': ['microsoft/phi-4'],
-            'deepseek': ['deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B']
+            'deepseek': ['deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'],
+            'angeloc1': ['angeloc1/autotrain-phi-ft-nap'],
         }
     }
     TERMINATOR_TOKENS = {
