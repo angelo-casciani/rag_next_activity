@@ -10,5 +10,6 @@
   "template-qwen": "<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\nHere is the past traces: {context}\nPrefix to predict: {question}<|im_end|>\n<|im_start|>assistant\n",
   "template-generic": "{system_message}\nHere is the past traces: {context}\nPrefix to predict: {question}\nAnswer: ",
   "template-phi": "<|im_start|>system<|im_sep|>\n{system_message}<|im_end|>\\n<|im_start|>user<|im_sep|>\nHere is the past traces: {context}\nPrefix to predict: {question}<|im_end|>\n<|im_start|>assistant<|im_sep|>",
+  "template-phi-ft": "<|im_start|>system<|im_sep|>\n{system_message}<|im_end|>\\n<|im_start|>user<|im_sep|>\nHere is the past traces: {context}\nPrefix to predict: {question}\nReturn the '\\\\boxed{{predicted_activity_name}}'<|im_end|>\n<|im_start|>assistant<|im_sep|>",
   "template-deepseek": "<｜begin▁of▁sentence｜>{system_message}\n\nUser: Here is the past traces: {context}\n\nPrefix to predict: {question}\nAssistant: "
 }

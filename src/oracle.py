@@ -95,17 +95,16 @@ class VerificationOracle:
             match = re.search(r'\\boxed\{([^}]*)\}', model_answer)
             if match:
                 content = match.group(1).strip("'")
-                model_answer = f'\\boxed{{{content}}}'
-            else:
-                model_answer = '\\boxed{Wrong format}'
-            if "None" in model_answer:
-                model_answer = '\\boxed{Wrong format}'
-
-            model_answer = re.sub(r'\\text\{(.*?)\}', r'\1', model_answer)  # Remove \text{}
-            model_answer = re.sub(r'[^a-zA-Z0-9\s]', '', model_answer).strip()  # Remove special characters
-            closest_match = difflib.get_close_matches(model_answer, self.total_classes, n=1, cutoff=0.6)
-            if closest_match:
-                model_answer = closest_match[0]  # Set model_answer to the best matching label
+                if "None" in content:
+                    model_answer = '\\boxed{Wrong format}'
+                else:
+                    content = re.sub(r'\\text\{(.*?)\}', r'\1', content)  # Remove \text{}
+                    content = re.sub(r'[^a-zA-Z0-9\s]', '', content).strip()  # Remove special characters
+                    closest_match = difflib.get_close_matches(content, self.total_classes, n=1, cutoff=0.6)
+                    if closest_match:
+                        model_answer = closest_match[0]
+                    else:
+                        model_answer = '\\boxed{Wrong format}'
             else:
                 model_answer = '\\boxed{Wrong format}'
 

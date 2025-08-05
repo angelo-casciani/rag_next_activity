@@ -29,7 +29,7 @@ class RAGPipeline:
             'google_genai': ['google/gemma-2-9b-it'],
             'microsoft': ['microsoft/phi-4'],
             'deepseek': ['deepseek-ai/DeepSeek-R1-Distill-Qwen-7B', 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B'],
-            'angeloc1': ['angeloc1/autotrain-phi-ft-nap'],
+            'angeloc1': ['angeloc1/autotrain-phi-ft-nap']
         }
     }
     TERMINATOR_TOKENS = {
@@ -43,6 +43,7 @@ class RAGPipeline:
         'mistral': 'template-mistral',
         'qwen': 'template-qwen',
         'microsoft': 'template-phi',
+        'angeloc1': 'template-phi-ft',
         'deepseek': 'template-deepseek',
         'openai': 'template-generic',
         'google_genai': 'template-generic',
@@ -53,6 +54,7 @@ class RAGPipeline:
         'mistral': '[/INST]',
         'qwen': '<|im_start|>assistant',
         'microsoft': '<|im_start|>assistant<|im_sep|>',
+        'angeloc1': '<|im_start|>assistant<|im_sep|>',
         'deepseek': 'Assistant: '
     }
 
