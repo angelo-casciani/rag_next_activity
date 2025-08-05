@@ -92,14 +92,25 @@ class VerificationOracle:
         expected_answer = self.prefix_with_expected_answer_pairs.get(prefix)
         if expected_answer is not None:
             result["expected_answer"] = expected_answer
+
             match = re.search(r'\\boxed\{([^}]*)\}', model_answer)
+            if not match:
+                match = re.search(r'### Assistant:\s*(.*)', model_answer)
+            if not match:
+                matches = list(re.finditer(r'\| Next activity:\s*(.*)', model_answer))
+                if matches:
+                    match = matches[-1]  # Last one
             if match:
                 content = match.group(1).strip("'")
+
                 if "None" in content:
                     model_answer = '\\boxed{Wrong format}'
                 else:
-                    content = re.sub(r'\\text\{(.*?)\}', r'\1', content)  # Remove \text{}
-                    content = re.sub(r'[^a-zA-Z0-9\s]', '', content).strip()  # Remove special characters
+                    # Remove \text{} and special characters
+                    content = re.sub(r'\\text\{(.*?)\}', r'\1', content)
+                    content = re.sub(r'[^a-zA-Z0-9\s]', '', content).strip()
+
+                    # Find closest class match
                     closest_match = difflib.get_close_matches(content, self.total_classes, n=1, cutoff=0.6)
                     if closest_match:
                         model_answer = closest_match[0]
