@@ -22,19 +22,29 @@ The framework can be decomposed into two main parts:
 
 ```
 .
-├── src               # source code of proposed framework
-|   ├── main.py       # main script for live prompting mode
-|   ├── eval.py       # evaluation script for batch testing
-|   ├── pipeline.py   # RAG pipeline implementation
-|   ├── oracle.py     # verification oracle
-|   └── ...
-├── tests             # sources for evaluation
-|   ├── outputs       # outputs of the live convesations
-|   ├── test_sets     # test sets employed during the evaluation
-|   └── validation    # evaluation results for each run
-├── logs.zip          # zipped folder with the tested log (to unzip)
-|   └──...
-└──...
+├── src/                       # source code of proposed framework
+│   ├── cmd4tests.sh           # bash commands to replicate the whole evaluation
+│   ├── eval.py                # evaluation script
+│   ├── log_preprocessing.py   # log preprocessing script
+│   ├── main.py                # script for live interaction
+│   ├── oracle.py              # verification oracle
+│   ├── pipeline.py            # RAG pipeline implementation
+│   ├── prompts.json           # prompts for the RAG-based LLM's calls
+│   ├── prompts_no_rag.json    # prompts for the LLM's calls without RAG
+│   ├── utility.py             # utility functions
+│   ├── vector_store.py        # vector store management
+│   └── llm_sft/               # folder for fine-tuning
+│       ├── README.md
+│       └── preprocessing_dataset.py
+├── tests/                     # sources for evaluation
+│   ├── outputs/               # outputs of the live conversations
+│   ├── test_sets/             # test sets employed during the evaluation
+│   └── validation/            # evaluation results for each run
+├── logs.zip                   # zipped folder with the tested log (to unzip)
+├── requirements.txt           # Python dependencies
+├── .env                       # Environment variables (create/fill this)
+├── LICENSE                    # License file
+└── README.md                  # This file
 ```
 
 ## Getting Started
