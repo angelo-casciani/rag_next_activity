@@ -299,3 +299,23 @@ The integrated earlyness analysis provides valuable insights for:
 
 ## License
 Distributed under the GNU GPL License. See [LICENSE](LICENSE) for more information.
+
+## Citation
+
+If you use this repository in your research, please cite:
+
+```bibtex
+@article{CASCIANI2026102642,
+title = {Enhancing next activity prediction in process mining with Retrieval-Augmented Generation},
+journal = {Information Systems},
+volume = {137},
+pages = {102642},
+year = {2026},
+issn = {0306-4379},
+doi = {https://doi.org/10.1016/j.is.2025.102642},
+url = {https://www.sciencedirect.com/science/article/pii/S0306437925001280},
+author = {Angelo Casciani and Mario Luca Bernardi and Marta Cimitile and Andrea Marrella},
+keywords = {Predictive Process Monitoring, Next activity prediction, Large Language Model, RetrieVal-Augmented Generation},
+abstract = {Next activity prediction is one of the main tasks of Predictive Process Monitoring (PPM), enabling organizations to forecast the execution of business processes and respond accordingly. Deep learning models are effective at predictions, but with the price of intensive training and feature engineering, rendering them less generalizable across domains. Large Language Models (LLMs) have been recently suggested as an alternative, but their capabilities in Process Mining tasks are still to be extensively investigated. This work introduces a framework leveraging LLMs and Retrieval-Augmented Generation to enhance their capabilities for predicting next activities. By leveraging sequential information and data attributes from past execution traces, our framework enables LLMs to make more accurate predictions without additional training. We evaluate the approach on a wide range of event logs and compare it with state-of-the-art techniques. Findings show that our framework achieves competitive performance while being more adaptable across domains. Moreover, we assess early prediction capabilities, validate the significance of observed differences through statistical testing, and explore the impact of fine-tuning. Despite these advantages, we also report the framework’s limitations, mainly related to interleaving activity sensitivity and concept drifts. Our findings highlight the potential of retrieval-augmented LLMs in PPM while identifying the need for future research into handling evolving process behaviors and the development of standard benchmarks.}
+}
+```
