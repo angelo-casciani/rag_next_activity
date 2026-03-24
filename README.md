@@ -1,6 +1,6 @@
 # Enhancing Next Activity Prediction in Process Mining with Retrieval-Augmented Generation
 
-This repository contains the code and data to reproduce the experiments from the paper _"Enhancing Next Activity Prediction in Process Mining with Retrieval-Augmented Generation"_.
+This repository contains the code and data to reproduce the experiments from the paper [Enhancing Next Activity Prediction in Process Mining with Retrieval-Augmented Generation](https://www.sciencedirect.com/science/article/pii/S0306437925001280).
 
 ## About
 
