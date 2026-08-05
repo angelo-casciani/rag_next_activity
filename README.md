@@ -1,8 +1,8 @@
 # Enhancing Next Activity Prediction in Process Mining with Retrieval-Augmented Generation
 
 [![Sapienza](https://img.shields.io/badge/Sapienza_University_of_Rome-blue?style=flatlabelColor=781A2D&color=781A2D&logoColor=white)](https://www.diag.uniroma1.it/gruppi-di-ricerca/25462)
-[![DOI](https://img.shields.io/badge/DOI-/zenodo.21293308-blue.svg)](https://doi.org/10.5281/zenodo.21293308)
-[![Version](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/angelo-casciani/rag_next_activity/releases)
+[![DOI](https://img.shields.io/badge/DOI-/zenodo.21807802-blue.svg)](https://doi.org/10.5281/zenodo.21807802)
+[![Version](https://img.shields.io/badge/release-v1.0.1-blue)](https://github.com/angelo-casciani/rag_next_activity/releases)
 [![GitHub license](https://img.shields.io/github/license/angelo-casciani/rag_next_activity)](https://github.com/angelo-casciani/rag_next_activity/blob/main/LICENSE)
 
 This repository contains the code and data to reproduce the experiments from the paper [Enhancing Next Activity Prediction in Process Mining with Retrieval-Augmented Generation](https://www.sciencedirect.com/science/article/pii/S0306437925001280).
